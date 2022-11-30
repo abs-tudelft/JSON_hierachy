@@ -1,13 +1,15 @@
+use core::fmt;
+use std::fmt::format;
+
 use json::JsonValue;
 
-#[derive(Debug)]
 enum JsonType {
     String,
     Integer,
     Boolean,
 }
 
-#[derive(Debug)]
+
 enum JsonComponent {
     Value(Value),
     Array(Array),
@@ -15,20 +17,20 @@ enum JsonComponent {
     Record(Record),
 }
 
-#[derive(Debug)]
+
 struct Value {
     data_type: JsonType,
     outer_nested: u16,
 }
 
-#[derive(Debug)]
+
 struct Array {
     outer_nested: u16,
     inner_nested: u16,
     child: Option<Box<JsonComponent>>
 }
 
-#[derive(Debug)]
+
 struct Record {
     name: String,
     outer_nested: u16,
@@ -36,18 +38,88 @@ struct Record {
     child: Option<Box<JsonComponent>>
 }
 
-#[derive(Debug)]
+impl fmt::Display for Record {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut output: String = String::new();
+
+        for _ in 0..self.outer_nested-1 {
+            output.push_str("\t");
+        }
+
+        output.push_str(&format!("Record: {}\n", self.name));
+
+        match self.child {
+            Some(ref child) => {
+                output.push_str(&format!("{}", child));
+            },
+            None => {
+                output.push_str(&format!("Empty"));
+            }
+        }
+            
+        write!(f, "{}\n", output)
+    }
+}
+
+
 struct Object {
     outer_nested: u16,
     inner_nested: u16,
     children: Vec<Record>
 }
 
+impl fmt::Display for JsonComponent {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut output: String = String::new();
+
+        match self {
+            JsonComponent::Object(obj) => {
+                for child in &obj.children {
+                    output.push_str(&format!("{}", child));
+                }
+
+                write!(f, "{}", output)
+            },
+            JsonComponent::Array(arr) => {
+                for _ in 0..arr.outer_nested-1 {
+                    output.push_str("\t");
+                }
+
+                output.push_str("Array\n");
+
+                match arr.child {
+                    Some(ref child) => output.push_str(&format!("{}", child)),
+                    None => output.push_str("Empty"),
+                };
+
+                write!(f, "{}", output)
+            },
+            JsonComponent::Value(val) => {
+                for _ in 0..val.outer_nested-1 {
+                    output.push_str("\t");
+                }
+
+                match val.data_type {
+                    JsonType::String => output.push_str("String"),
+                    JsonType::Integer => output.push_str("Integer"),
+                    JsonType::Boolean => output.push_str("Boolean"),
+                };
+
+                write!(f, "{}", output)
+            }
+            _ => writeln!(f, "Not implemented"),
+        }
+    }
+}
+
 fn main() {
     let data = r#"
     {
         "voltage":
-            [{"voltage":1128},{"voltage":1213},{"voltage":1850}]
+            [{"voltage":1128},{"voltage":1213},{"voltage":1850}],
+        "valid":true,
+        "current":
+            {"current": 123}
      }
      "#;
 
@@ -63,7 +135,14 @@ fn main() {
 
     let (root, _) = analyze_element(&parsed, 0, 0);
 
-    println!("{:?}", root);
+    match root {
+        Some(root) => {
+            println!("{}", root);
+        },
+        None => {
+            println!("Parsing failed or empty JSON");
+        }
+    }
 }
 
 // Analyze a record of the JSON object
