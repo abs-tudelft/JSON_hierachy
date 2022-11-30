@@ -1,3 +1,5 @@
+use json::JsonValue;
+
 #[derive(Debug)]
 enum JsonType {
     String,
@@ -65,7 +67,7 @@ fn main() {
 }
 
 // Analyze a record of the JSON object
-fn analyze_record(key: &str, element: &json::JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
+fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
     let (child, new_inner_nesting) = analyze_element(element, outer_nesting, inner_nesting);
 
     match child {
@@ -85,10 +87,10 @@ fn analyze_record(key: &str, element: &json::JsonValue, outer_nesting: u16, inne
 }
 
 // Analyze the element and recursively call itself if it is an object or array to find nested elements
-fn analyze_element(element: &json::JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
+fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
     match element {
         // Element has string type
-        json::JsonValue::Short(_) | json::JsonValue::String(_) => 
+        JsonValue::Short(_) | JsonValue::String(_) => 
             (
                 Some(
                     JsonComponent::Value(
@@ -102,7 +104,7 @@ fn analyze_element(element: &json::JsonValue, outer_nesting: u16, inner_nesting:
                 inner_nesting
             ),
         // Element has integer type
-        json::JsonValue::Number(_) => 
+        JsonValue::Number(_) => 
             (
                 Some(
                     JsonComponent::Value(
@@ -116,7 +118,7 @@ fn analyze_element(element: &json::JsonValue, outer_nesting: u16, inner_nesting:
                 inner_nesting
             ),
         // Element has boolean type
-        json::JsonValue::Boolean(_) => 
+        JsonValue::Boolean(_) => 
             (
                 Some(
                     JsonComponent::Value(
@@ -130,7 +132,7 @@ fn analyze_element(element: &json::JsonValue, outer_nesting: u16, inner_nesting:
                 inner_nesting
             ),
         // Element is an array
-        json::JsonValue::Array(arr) => {
+        JsonValue::Array(arr) => {
             // If the array is empty, return None
             if arr.is_empty() {
                 return (None, inner_nesting + 1);
@@ -159,7 +161,7 @@ fn analyze_element(element: &json::JsonValue, outer_nesting: u16, inner_nesting:
             )
         },
         // Element is an object
-        json::JsonValue::Object(_) => {
+        JsonValue::Object(_) => {
             let mut children: Vec<Record> = Vec::new();
             let mut new_inner_nesting = Vec::new();
 
@@ -196,6 +198,6 @@ fn analyze_element(element: &json::JsonValue, outer_nesting: u16, inner_nesting:
                 max_inner_nesting + 1
             )
         },
-        json::JsonValue::Null => (None, inner_nesting),
+        JsonValue::Null => (None, inner_nesting),
     }
 }
