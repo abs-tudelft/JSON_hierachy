@@ -1,5 +1,4 @@
 use core::fmt;
-use std::fmt::format;
 
 use json::JsonValue;
 
@@ -11,61 +10,26 @@ enum JsonType {
 
 
 enum JsonComponent {
-    Value(Value),
-    Array(Array),
-    Object(Object),
-    Record(Record),
-}
-
-
-struct Value {
-    data_type: JsonType,
-    outer_nested: u16,
-}
-
-
-struct Array {
-    outer_nested: u16,
-    inner_nested: u16,
-    child: Option<Box<JsonComponent>>
-}
-
-
-struct Record {
-    name: String,
-    outer_nested: u16,
-    inner_nested: u16,
-    child: Option<Box<JsonComponent>>
-}
-
-impl fmt::Display for Record {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut output: String = String::new();
-
-        for _ in 0..self.outer_nested-1 {
-            output.push_str("\t");
-        }
-
-        output.push_str(&format!("Record: {}\n", self.name));
-
-        match self.child {
-            Some(ref child) => {
-                output.push_str(&format!("{}", child));
-            },
-            None => {
-                output.push_str(&format!("Empty"));
-            }
-        }
-            
-        write!(f, "{}\n", output)
-    }
-}
-
-
-struct Object {
-    outer_nested: u16,
-    inner_nested: u16,
-    children: Vec<Record>
+    Value {
+        dataType: JsonType, 
+        outer_nested: u16
+    },
+    Array{
+        outer_nested: u16,
+        inner_nested: u16,
+        child: Option<Box<JsonComponent>>
+    },
+    Object {
+        outer_nested: u16,
+        inner_nested: u16,
+        children: Vec<JsonComponent>
+    },
+    Record {
+        name: String,
+        outer_nested: u16,
+        inner_nested: u16,
+        child: Option<Box<JsonComponent>>
+    },
 }
 
 impl fmt::Display for JsonComponent {
@@ -73,33 +37,33 @@ impl fmt::Display for JsonComponent {
         let mut output: String = String::new();
 
         match self {
-            JsonComponent::Object(obj) => {
-                for child in &obj.children {
+            JsonComponent::Object { outer_nested: _, inner_nested:_, children } => {
+                for child in children {
                     output.push_str(&format!("{}", child));
                 }
 
                 write!(f, "{}", output)
             },
-            JsonComponent::Array(arr) => {
-                for _ in 0..arr.outer_nested-1 {
+            JsonComponent::Array { outer_nested, inner_nested: _, child } => {
+                for _ in 0..outer_nested-1 {
                     output.push_str("\t");
                 }
 
                 output.push_str("Array\n");
 
-                match arr.child {
-                    Some(ref child) => output.push_str(&format!("{}", child)),
+                match child {
+                    Some(ref ref_child) => output.push_str(&format!("{}", ref_child)),
                     None => output.push_str("Empty"),
                 };
 
                 write!(f, "{}", output)
             },
-            JsonComponent::Value(val) => {
-                for _ in 0..val.outer_nested-1 {
+            JsonComponent::Value { dataType, outer_nested } => {
+                for _ in 0..outer_nested-1 {
                     output.push_str("\t");
                 }
 
-                match val.data_type {
+                match dataType {
                     JsonType::String => output.push_str("String"),
                     JsonType::Integer => output.push_str("Integer"),
                     JsonType::Boolean => output.push_str("Boolean"),
@@ -107,7 +71,26 @@ impl fmt::Display for JsonComponent {
 
                 write!(f, "{}", output)
             }
-            _ => writeln!(f, "Not implemented"),
+            JsonComponent::Record { name, outer_nested, inner_nested: _, child } => {
+                let mut output: String = String::new();
+
+                for _ in 0..outer_nested-1 {
+                    output.push_str("\t");
+                }
+
+                output.push_str(&format!("Record: {}\n", name));
+
+                match child {
+                    Some(ref ref_child) => {
+                        output.push_str(&format!("{}", ref_child));
+                    },
+                    None => {
+                        output.push_str(&format!("Empty"));
+                    }
+                }
+                    
+                write!(f, "{}\n", output)
+            },
         }
     }
 }
@@ -152,14 +135,13 @@ fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nest
     match child {
         Some(child) => 
             (
-                Some(JsonComponent::Record(
-                    Record {
+                Some(
+                    JsonComponent::Record {
                         name: key.to_string(),
                         outer_nested: outer_nesting,
                         inner_nested: new_inner_nesting,
                         child: Some(Box::new(child)),
                     }
-                )
             ), new_inner_nesting),
         None => (None, new_inner_nesting)
     }
@@ -172,12 +154,10 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
         JsonValue::Short(_) | JsonValue::String(_) => 
             (
                 Some(
-                    JsonComponent::Value(
-                        Value {
-                            data_type: JsonType::String,
-                            outer_nested: outer_nesting + 1,
-                        }
-                    )
+                    JsonComponent::Value {
+                        dataType: JsonType::String,
+                        outer_nested: outer_nesting + 1,
+                    }
                 ), 
                 // Types don't increase the nesting level
                 inner_nesting
@@ -186,12 +166,10 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
         JsonValue::Number(_) => 
             (
                 Some(
-                    JsonComponent::Value(
-                        Value {
-                            data_type: JsonType::Integer,
-                            outer_nested: outer_nesting + 1,
-                        }
-                    )
+                    JsonComponent::Value {
+                        dataType: JsonType::Integer,
+                        outer_nested: outer_nesting + 1,
+                    }
                 ), 
                 // Types don't increase the nesting level
                 inner_nesting
@@ -200,12 +178,10 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
         JsonValue::Boolean(_) => 
             (
                 Some(
-                    JsonComponent::Value(
-                        Value {
-                            data_type: JsonType::Boolean,
-                            outer_nested: outer_nesting + 1,
-                        }
-                    )
+                    JsonComponent::Value {
+                        dataType: JsonType::Boolean,
+                        outer_nested: outer_nesting + 1,
+                    }
                 ), 
                 // Types don't increase the nesting level
                 inner_nesting
@@ -224,16 +200,14 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
             // Return the array with the child element
             (
                 Some(
-                    JsonComponent::Array(
-                        Array {
-                            outer_nested: outer_nesting + 1,
-                            inner_nested: new_inner_nesting,
-                            child: match child {
-                                Some(component) => Some(Box::new(component)),
-                                None => None,
-                            }
+                    JsonComponent::Array {
+                        outer_nested: outer_nesting + 1,
+                        inner_nested: new_inner_nesting,
+                        child: match child {
+                            Some(component) => Some(Box::new(component)),
+                            None => None,
                         }
-                    )
+                    }
                 ),
                 // An array increases the inner nesting by 1
                 new_inner_nesting + 1
@@ -241,7 +215,7 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
         },
         // Element is an object
         JsonValue::Object(_) => {
-            let mut children: Vec<Record> = Vec::new();
+            let mut children: Vec<JsonComponent> = Vec::new();
             let mut new_inner_nesting = Vec::new();
 
             // Analyze all the records of the object
@@ -251,7 +225,9 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
                 
                 // Check if the record is not empty
                 match child {
-                    Some(JsonComponent::Record(record)) => children.push(record),
+                    Some(component) => {
+                        children.push(component)
+                    },
                     _ => (),
                 } 
 
@@ -265,13 +241,11 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
             // Return the object with the children
             (
                 Some(
-                    JsonComponent::Object(
-                        Object {
-                            outer_nested: outer_nesting + 1,
-                            inner_nested: max_inner_nesting,
-                            children: children,
-                        }
-                    )
+                    JsonComponent::Object {
+                        outer_nested: outer_nesting + 1,
+                        inner_nested: max_inner_nesting,
+                        children: children,
+                    }
                 ),
                 // An object increases the inner nesting by 1
                 max_inner_nesting + 1
