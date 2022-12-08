@@ -11,7 +11,7 @@ pub enum JsonType {
 
 pub enum JsonComponent {
     Value {
-        dataType: JsonType, 
+        data_type: JsonType, 
         outer_nested: u16
     },
     Array{
@@ -26,6 +26,7 @@ pub enum JsonComponent {
     },
     Key {
         name: String,
+        outer_nested: u16,
         value: Option<Box<JsonComponent>>
     },
 }
@@ -37,17 +38,17 @@ struct Graph { nodes: Vec<String>, edges: Vec<(usize,usize)> }
 impl JsonComponent {
     pub fn to_vhdl(&self) -> String {
         match self {
-            JsonComponent::Value { dataType, outer_nested } => {
+            JsonComponent::Value { data_type, outer_nested } => {
                 let mut vhdl = String::new();
-                vhdl.push_str(&format!("{}: {:?}", outer_nested, dataType));
+                vhdl.push_str(&format!("{}: {:?}", outer_nested, data_type));
                 vhdl
             },
-            JsonComponent::Array { outer_nested, inner_nested, value } => {
+            JsonComponent::Array { outer_nested, inner_nested, value: _ } => {
                 let mut vhdl = String::new();
                 vhdl.push_str(&format!("{}: Array({}) of ", outer_nested, inner_nested));
                 vhdl
             },
-            JsonComponent::Key { name, value } => {
+            JsonComponent::Key { name, outer_nested: _, value: _ } => {
                 let mut vhdl = String::new();
                 vhdl.push_str(&format!("Key({})", name));
                 vhdl
@@ -56,22 +57,22 @@ impl JsonComponent {
         }
     }
 
-    fn update_graph(&self, parentID: Option<usize>, graph: &mut Graph) {
+    fn update_graph(&self, parent_id: Option<usize>, graph: &mut Graph) {
         match self {
-            JsonComponent::Value { dataType, outer_nested } => {
-                graph.nodes.push(format!("{:?} parser", dataType));
+            JsonComponent::Value { data_type, outer_nested } => {
+                graph.nodes.push(format!("{:?} parser\nO: {}", data_type, outer_nested));
                 let id = graph.nodes.len() - 1;
 
-                if let Some(parentID) = parentID {
-                    graph.edges.push((parentID, id));
+                if let Some(parent_id) = parent_id {
+                    graph.edges.push((parent_id, id));
                 }
             },
             JsonComponent::Array { outer_nested, inner_nested, value } => {
-                graph.nodes.push(format!("Array parser"));
+                graph.nodes.push(format!("Array parser\nO: {}, I: {}", outer_nested, inner_nested));
                 let id = graph.nodes.len() - 1;
 
-                if let Some(parentID) = parentID {
-                    graph.edges.push((parentID, id));
+                if let Some(parent_id) = parent_id {
+                    graph.edges.push((parent_id, id));
                 }
 
                 if let Some(value) = value {
@@ -79,23 +80,23 @@ impl JsonComponent {
                 }
             },
             JsonComponent::Object { outer_nested, inner_nested, records } => {
-                graph.nodes.push(format!("Record parser"));
+                graph.nodes.push(format!("Object parser\nO: {}, I: {}", outer_nested, inner_nested));
                 let id = graph.nodes.len() - 1;
 
-                if let Some(parentID) = parentID {
-                    graph.edges.push((parentID, id));
+                if let Some(parent_id) = parent_id {
+                    graph.edges.push((parent_id, id));
                 }
 
                 for record in records {
                     record.update_graph(Some(id), graph);
                 }
             },
-            JsonComponent::Key { name, value } => {
-                graph.nodes.push(format!("Key filter"));
+            JsonComponent::Key { name, outer_nested, value } => {
+                graph.nodes.push(format!("Key filter\nMatch: \"{}\"\nO: {}", name, outer_nested));
                 let id = graph.nodes.len() - 1;
 
-                if let Some(parentID) = parentID {
-                    graph.edges.push((parentID, id));
+                if let Some(parent_id) = parent_id {
+                    graph.edges.push((parent_id, id));
                 }
 
                 if let Some(value) = value {
@@ -105,10 +106,10 @@ impl JsonComponent {
         }
     }
 
-    pub fn to_dot<W: Write>(&self, outputFile: &mut W) {
+    pub fn to_dot<W: Write>(&self, output_file: &mut W) {
         let mut graph: Graph = Graph{nodes: Vec::new(), edges: Vec::new()};
         self.update_graph(None, &mut graph);
-        dot::render(&graph, outputFile).unwrap()
+        dot::render(&graph, output_file).unwrap()
     }
 }
 
@@ -163,12 +164,12 @@ impl fmt::Display for JsonComponent {
 
                 write!(f, "{}", output)
             },
-            JsonComponent::Value { dataType, outer_nested } => {
+            JsonComponent::Value { data_type, outer_nested } => {
                 for _ in 0..outer_nested-1 {
                     output.push_str("\t");
                 }
 
-                match dataType {
+                match data_type {
                     JsonType::String => output.push_str("String"),
                     JsonType::Integer => output.push_str("Integer"),
                     JsonType::Boolean => output.push_str("Boolean"),
@@ -176,12 +177,12 @@ impl fmt::Display for JsonComponent {
 
                 write!(f, "{}", output)
             }
-            JsonComponent::Key { name, value } => {
+            JsonComponent::Key { name, outer_nested, value } => {
                 let mut output: String = String::new();
 
-                // for _ in 0..outer_nested-1 {
-                //     output.push_str("\t");
-                // }
+                for _ in 0..outer_nested-1 {
+                    output.push_str("\t");
+                }
 
                 output.push_str(&format!("Key: {}\n", name));
 

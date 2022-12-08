@@ -52,6 +52,7 @@ fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nest
                 Some(
                     JsonComponent::Key {
                         name: key.to_string(),
+                        outer_nested: outer_nesting + 1,
                         value: Some(Box::new(child)),
                     }
             ), new_inner_nesting),
@@ -67,7 +68,7 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
             (
                 Some(
                     JsonComponent::Value {
-                        dataType: JsonType::String,
+                        data_type: JsonType::String,
                         outer_nested: outer_nesting + 1,
                     }
                 ), 
@@ -79,7 +80,7 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
             (
                 Some(
                     JsonComponent::Value {
-                        dataType: JsonType::Integer,
+                        data_type: JsonType::Integer,
                         outer_nested: outer_nesting + 1,
                     }
                 ), 
@@ -91,7 +92,7 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
             (
                 Some(
                     JsonComponent::Value {
-                        dataType: JsonType::Boolean,
+                        data_type: JsonType::Boolean,
                         outer_nested: outer_nesting + 1,
                     }
                 ), 
