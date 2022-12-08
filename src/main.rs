@@ -15,32 +15,29 @@ fn main() {
      }
      "#;
 
-    //  let data = r#"
-    //  {
-    //     "voltage":
-    //         [1128,1213,1850,429]
-    //  }
-    //  "#;
+    // let data = r#"
+    //     {
+    //         "voltage":
+    //             [1128,1213,1850,429]
+    //     }
+    // "#;
+
+    let visualize = true;
 
     // Deserialize the JSON string
     let parsed = json::parse(data).unwrap();
 
     let (root, _) = analyze_element(&parsed, 0, 0);
+    
+    if visualize {
+        use std::fs::{File, create_dir_all};
+        
+        create_dir_all("output").unwrap();
 
-    match root {
-        Some(root) => {
-            println!("{}", root);
-            match root {
-                JsonComponent::Object { outer_nested: _, inner_nested:_, records } => {
-                    for record in records {
-                        println!("{}", record.to_vhdl());
-                    }
-                },
-                _ => {}
-            }
-        },
-        None => {
-            println!("Parsing failed or empty JSON");
+        let mut f = File::create("./output/schema.dot").unwrap();
+
+        if let Some(root) = root {
+            root.to_dot(&mut f);
         }
     }
 }
