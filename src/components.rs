@@ -1,5 +1,6 @@
 use core::fmt;
 
+#[derive(Debug)]
 pub enum JsonType {
     String,
     Integer,
@@ -15,19 +16,40 @@ pub enum JsonComponent {
     Array{
         outer_nested: u16,
         inner_nested: u16,
-        child: Option<Box<JsonComponent>>
+        value: Option<Box<JsonComponent>>
     },
     Object {
         outer_nested: u16,
         inner_nested: u16,
-        children: Vec<JsonComponent>
+        records: Vec<JsonComponent>
     },
-    Record {
+    Key {
         name: String,
-        outer_nested: u16,
-        inner_nested: u16,
-        child: Option<Box<JsonComponent>>
+        value: Option<Box<JsonComponent>>
     },
+}
+
+impl JsonComponent {
+    pub fn to_vhdl(&self) -> String {
+        match self {
+            JsonComponent::Value { dataType, outer_nested } => {
+                let mut vhdl = String::new();
+                vhdl.push_str(&format!("{}: {:?}", outer_nested, dataType));
+                vhdl
+            },
+            JsonComponent::Array { outer_nested, inner_nested, value } => {
+                let mut vhdl = String::new();
+                vhdl.push_str(&format!("{}: Array({}) of ", outer_nested, inner_nested));
+                vhdl
+            },
+            JsonComponent::Key { name, value } => {
+                let mut vhdl = String::new();
+                vhdl.push_str(&format!("Key({})", name));
+                vhdl
+            },
+            _ => "".to_string(),
+        }
+    }
 }
 
 impl fmt::Display for JsonComponent {
@@ -35,21 +57,21 @@ impl fmt::Display for JsonComponent {
         let mut output: String = String::new();
 
         match self {
-            JsonComponent::Object { outer_nested: _, inner_nested:_, children } => {
-                for child in children {
+            JsonComponent::Object { outer_nested: _, inner_nested:_, records } => {
+                for child in records {
                     output.push_str(&format!("{}", child));
                 }
 
                 write!(f, "{}", output)
             },
-            JsonComponent::Array { outer_nested, inner_nested: _, child } => {
+            JsonComponent::Array { outer_nested, inner_nested: _, value } => {
                 for _ in 0..outer_nested-1 {
                     output.push_str("\t");
                 }
 
                 output.push_str("Array\n");
 
-                match child {
+                match value {
                     Some(ref ref_child) => output.push_str(&format!("{}", ref_child)),
                     None => output.push_str("Empty"),
                 };
@@ -69,16 +91,16 @@ impl fmt::Display for JsonComponent {
 
                 write!(f, "{}", output)
             }
-            JsonComponent::Record { name, outer_nested, inner_nested: _, child } => {
+            JsonComponent::Key { name, value } => {
                 let mut output: String = String::new();
 
-                for _ in 0..outer_nested-1 {
-                    output.push_str("\t");
-                }
+                // for _ in 0..outer_nested-1 {
+                //     output.push_str("\t");
+                // }
 
-                output.push_str(&format!("Record: {}\n", name));
+                output.push_str(&format!("Key: {}\n", name));
 
-                match child {
+                match value {
                     Some(ref ref_child) => {
                         output.push_str(&format!("{}", ref_child));
                     },

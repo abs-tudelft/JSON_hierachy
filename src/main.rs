@@ -30,6 +30,14 @@ fn main() {
     match root {
         Some(root) => {
             println!("{}", root);
+            match root {
+                JsonComponent::Object { outer_nested: _, inner_nested:_, records } => {
+                    for record in records {
+                        println!("{}", record.to_vhdl());
+                    }
+                },
+                _ => {}
+            }
         },
         None => {
             println!("Parsing failed or empty JSON");
@@ -45,11 +53,9 @@ fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nest
         Some(child) => 
             (
                 Some(
-                    JsonComponent::Record {
+                    JsonComponent::Key {
                         name: key.to_string(),
-                        outer_nested: outer_nesting,
-                        inner_nested: new_inner_nesting,
-                        child: Some(Box::new(child)),
+                        value: Some(Box::new(child)),
                     }
             ), new_inner_nesting),
         None => (None, new_inner_nesting)
@@ -112,7 +118,7 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
                     JsonComponent::Array {
                         outer_nested: outer_nesting + 1,
                         inner_nested: new_inner_nesting,
-                        child: match child {
+                        value: match child {
                             Some(component) => Some(Box::new(component)),
                             None => None,
                         }
@@ -153,7 +159,7 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
                     JsonComponent::Object {
                         outer_nested: outer_nesting + 1,
                         inner_nested: max_inner_nesting,
-                        children: children,
+                        records: children,
                     }
                 ),
                 // An object increases the inner nesting by 1
