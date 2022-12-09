@@ -1,4 +1,6 @@
 mod components;
+mod visualization;
+
 use components::JsonComponent;
 use components::JsonType;
 
@@ -30,14 +32,8 @@ fn main() {
     let (root, _) = analyze_element(&parsed, 0, 0);
     
     if visualize {
-        use std::fs::{File, create_dir_all};
-        
-        create_dir_all("output").unwrap();
-
-        let mut f = File::create("./output/schema.dot").unwrap();
-
         if let Some(root) = root {
-            root.to_dot(&mut f);
+            visualization::generate(&root, "./output/schema.dot")
         }
     }
 }
