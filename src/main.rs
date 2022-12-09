@@ -33,7 +33,7 @@ fn main() {
     
     if visualize {
         if let Some(root) = root {
-            visualization::generate(&root, "./output/schema.dot")
+            visualization::generate_dot(&root, "./output/schema.dot")
         }
     }
 }
