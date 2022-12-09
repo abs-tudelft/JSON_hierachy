@@ -34,7 +34,7 @@ fn update_graph(component: &JsonComponent, parent_id: Option<usize>, graph: &mut
         },
         JsonComponent::Object { outer_nested, inner_nested, records } => {
             // Add component to the graph
-            graph.nodes.push(format!("Object parser\nO: {}, I: {}", outer_nested, inner_nested));
+            graph.nodes.push(format!("Record parser\nO: {}, I: {}", outer_nested, inner_nested));
             let id = graph.nodes.len() - 1;
 
             // Add an edge from the parent to the current node

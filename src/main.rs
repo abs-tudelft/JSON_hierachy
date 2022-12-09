@@ -7,7 +7,7 @@ use components::JsonType;
 use json::JsonValue;
 
 fn main() {
-    let data = r#"
+    let multiple_keys = r#"
     {
         "voltage":
             [{"voltage":1128},{"voltage":1213},{"voltage":1850}],
@@ -17,17 +17,24 @@ fn main() {
      }
      "#;
 
-    // let data = r#"
-    //     {
-    //         "voltage":
-    //             [1128,1213,1850,429]
-    //     }
-    // "#;
+    let nested = r#"
+    {
+        "voltage":
+            [{"voltage":1128},{"voltage":1213},{"voltage":1850}]
+    }
+    "#;
+
+    let simple = r#"
+    {
+        "voltage":
+            [1128,1213,1850,429]
+    }
+    "#;
 
     let visualize = true;
 
     // Deserialize the JSON string
-    let parsed = json::parse(data).unwrap();
+    let parsed = json::parse(multiple_keys).unwrap();
 
     let (root, _) = analyze_element(&parsed, 0, 0);
     
