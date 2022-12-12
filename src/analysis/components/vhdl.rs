@@ -1,6 +1,6 @@
 use indoc::formatdoc;
 
-use crate::components::{JsonComponent, JsonType};
+use super::{JsonComponent, JsonType};
 
 impl JsonComponent {
     pub fn to_vhdl(&self) -> String {

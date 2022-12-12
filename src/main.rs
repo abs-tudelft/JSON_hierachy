@@ -1,7 +1,4 @@
-mod components;
-mod visualization;
 mod analysis;
-mod vhdl;
 
 use analysis::Generator;
 

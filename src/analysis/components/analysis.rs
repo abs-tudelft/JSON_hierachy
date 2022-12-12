@@ -1,71 +1,9 @@
-use crate::components::JsonComponent;
-use crate::components::JsonType;
-
-
-use crate::visualization;
-
 use json::JsonValue;
 
-pub struct Generator {
-    root: Option<JsonComponent>,
-}
-
-impl Generator {
-    pub fn new() -> Generator {
-        Generator {
-            root: None
-        }
-    }
-
-    pub fn analyze(&mut self, json: &str) -> Result<(), GeneratorError> {
-        // Deserialize the JSON string
-        let parsed = json::parse(json)
-        // In case of error, return the error
-        .map_err(|e| GeneratorError::JsonError(e))?; 
-
-        let (root, _) = analyze_element(&parsed, 0, 0);
-        self.root = root;
-
-        Ok(())
-    }
-
-    pub fn visualize(&self, path: &str) -> Result<(), GeneratorError> {
-        
-        if let Some(root) = &self.root {
-            visualization::generate_dot(&root, path)
-        } else { return Err(GeneratorError::NoRoot); }
-
-        Ok(())
-    }
-
-    pub fn vhdl(&self, path: &str) -> Result<(), GeneratorError> {
-        // Separate output path into directory and file name
-        let (dir, _) = path.split_at(path.rfind('/').unwrap_or(0));
-
-        // Create the directory if it doesn't exist
-        std::fs::create_dir_all(dir).unwrap();
-
-        // Create the file
-        let mut file = std::fs::File::create(path).unwrap();
-
-        if let Some(root) = &self.root {
-            use std::io::Write;
-
-            file.write_fmt(format_args!("{}", root.to_vhdl())).unwrap();
-        } else { return Err(GeneratorError::NoRoot); }
-
-        Ok(())
-    }
-}
-
-#[derive(Debug)]
-pub enum GeneratorError {
-    JsonError(json::JsonError),
-    NoRoot,
-}
+use super::{JsonComponent, JsonType};
 
 // Analyze a record of the JSON object
-fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
+pub fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
     let (child, new_inner_nesting) = analyze_element(element, outer_nesting, inner_nesting);
 
     match child {
@@ -83,7 +21,7 @@ fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nest
 }
 
 // Analyze the element and recursively call itself if it is an object or array to find nested elements
-fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
+pub fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
     match element {
         // Element has string type
         JsonValue::Short(_) | JsonValue::String(_) => 

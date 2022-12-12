@@ -1,4 +1,4 @@
-use crate::components::JsonComponent;
+use super::components::JsonComponent;
 
 type Nd<'a> = (usize, &'a str);
 type Ed<'a> = (Nd<'a>, Nd<'a>);

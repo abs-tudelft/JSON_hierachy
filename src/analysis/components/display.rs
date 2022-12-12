@@ -1,35 +1,6 @@
 use core::fmt;
 
-
-
-#[derive(Debug)]
-pub enum JsonType {
-    String,
-    Integer,
-    Boolean,
-}
-
-pub enum JsonComponent {
-    Value {
-        data_type: JsonType, 
-        outer_nested: u16
-    },
-    Array{
-        outer_nested: u16,
-        inner_nested: u16,
-        value: Option<Box<JsonComponent>>
-    },
-    Object {
-        outer_nested: u16,
-        inner_nested: u16,
-        records: Vec<JsonComponent>
-    },
-    Key {
-        name: String,
-        outer_nested: u16,
-        value: Option<Box<JsonComponent>>
-    },
-}
+use super::{JsonComponent, JsonType};
 
 // Implementation of how to render the component hierachy on the console
 impl fmt::Display for JsonComponent {
