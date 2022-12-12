@@ -3,7 +3,7 @@ mod analysis;
 use analysis::Generator;
 
 fn main() {
-    let multiple_keys = r#"
+    let _multiple_keys = r#"
     {
         "voltage":
             [{"voltage":1128},{"voltage":1213},{"voltage":1850}],
@@ -13,14 +13,14 @@ fn main() {
      }
      "#;
 
-    let nested = r#"
+    let _nested = r#"
     {
         "voltage":
             [{"voltage":1128},{"voltage":1213},{"voltage":1850}]
     }
     "#;
 
-    let simple = r#"
+    let _simple = r#"
     {
         "voltage":
             [1128,1213,1850,429]
@@ -33,7 +33,7 @@ fn main() {
     let mut generator = Generator::new();
 
     // Analyze the JSON string
-    generator.analyze(simple).unwrap();
+    generator.analyze(_simple).unwrap();
     
     if visualize {
         // Visualize the JSON string

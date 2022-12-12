@@ -1,4 +1,4 @@
-use super::{visualization, components, Generator};
+use super::{visualization, components, Generator, vhdl};
 
 impl Generator {
     pub fn new() -> Generator {
@@ -40,11 +40,19 @@ impl Generator {
         // Create the file
         let mut file = std::fs::File::create(path).unwrap();
 
+        use std::io::Write;
+
+        // Write the prelude
+        file.write_fmt(format_args!("{}", vhdl::generate_prelude())).unwrap();
+
         if let Some(root) = &self.root {
-            use std::io::Write;
+            
 
             file.write_fmt(format_args!("{}", root.to_vhdl())).unwrap();
         } else { return Err(GeneratorError::NoRoot); }
+
+        // Write the postlude
+        file.write_fmt(format_args!("{}", vhdl::generate_postlude())).unwrap();
 
         Ok(())
     }
