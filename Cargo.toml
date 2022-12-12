@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 dot = "0.1.4"
+indoc = "1.0.7"
 json = "0.12.4"

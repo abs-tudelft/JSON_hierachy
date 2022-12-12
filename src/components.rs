@@ -1,5 +1,7 @@
 use core::fmt;
 
+
+
 #[derive(Debug)]
 pub enum JsonType {
     String,
@@ -27,29 +29,6 @@ pub enum JsonComponent {
         outer_nested: u16,
         value: Option<Box<JsonComponent>>
     },
-}
-
-impl JsonComponent {
-    pub fn to_vhdl(&self) -> String {
-        match self {
-            JsonComponent::Value { data_type, outer_nested } => {
-                let mut vhdl = String::new();
-                vhdl.push_str(&format!("{}: {:?}", outer_nested, data_type));
-                vhdl
-            },
-            JsonComponent::Array { outer_nested, inner_nested, value: _ } => {
-                let mut vhdl = String::new();
-                vhdl.push_str(&format!("{}: Array({}) of ", outer_nested, inner_nested));
-                vhdl
-            },
-            JsonComponent::Key { name, outer_nested: _, value: _ } => {
-                let mut vhdl = String::new();
-                vhdl.push_str(&format!("Key({})", name));
-                vhdl
-            },
-            _ => "".to_string(),
-        }
-    }
 }
 
 // Implementation of how to render the component hierachy on the console
