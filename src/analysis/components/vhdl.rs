@@ -2,6 +2,10 @@ use indoc::formatdoc;
 
 use super::{JsonComponent, JsonType};
 
+/**********************************************************************************
+ * Implementation of how a component is translated to VHDL                        *
+ **********************************************************************************/
+
 impl JsonComponent {
     pub fn to_vhdl(&self) -> String {
         match self {
@@ -113,6 +117,7 @@ impl JsonComponent {
                 // Add trailing new line
                 vhdl.push_str("\n");
 
+                // Recursively generate VHDL for the child component, if it exists
                 if let Some(value) = value {
                     vhdl.push_str(&value.to_vhdl());
                 }
@@ -173,7 +178,8 @@ impl JsonComponent {
 
                 // Add trailing new line
                 vhdl.push_str("\n");
-
+                
+                // Recursively generate VHDL for the value of the record, if it exists
                 if let Some(value) = value {
                     vhdl.push_str(&value.to_vhdl());
                 }
@@ -214,6 +220,7 @@ impl JsonComponent {
                 // Add trailing new line
                 vhdl.push_str("\n");
 
+                // Recursively generate VHDL for child components
                 for child in records {
                     vhdl.push_str(&child.to_vhdl());
                 }

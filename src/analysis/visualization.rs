@@ -1,5 +1,9 @@
 use super::components::JsonComponent;
 
+/**********************************************************************************
+ * Implementation of how to rendering the component tree to a dot file            *
+ **********************************************************************************/
+
 type Nd<'a> = (usize, &'a str);
 type Ed<'a> = (Nd<'a>, Nd<'a>);
 struct Graph { nodes: Vec<String>, edges: Vec<(usize,usize)> }

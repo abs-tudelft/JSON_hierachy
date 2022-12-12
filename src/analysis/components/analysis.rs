@@ -2,6 +2,11 @@ use json::JsonValue;
 
 use super::{JsonComponent, JsonType};
 
+/**********************************************************************************
+ * Set of functions to analyze the parsed JSON object into a component structure  *
+ * which can be used to generate VHDL code.                                       *
+ **********************************************************************************/
+
 // Analyze a record of the JSON object
 pub fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
     let (child, new_inner_nesting) = analyze_element(element, outer_nesting, inner_nesting);

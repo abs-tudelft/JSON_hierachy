@@ -2,7 +2,12 @@ use core::fmt;
 
 use super::{JsonComponent, JsonType};
 
-// Implementation of how to render the component hierachy on the console
+/**********************************************************************************
+ * Implementation of how to render the component hierachy on the console          *
+ * (The dot visualization in the generator is more clear)                         *
+ **********************************************************************************/
+
+
 impl fmt::Display for JsonComponent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut output: String = String::new();

@@ -7,6 +7,7 @@ impl Generator {
         }
     }
 
+    // Analyze a JSON string
     pub fn analyze(&mut self, json: &str) -> Result<(), GeneratorError> {
         // Deserialize the JSON string
         let parsed = json::parse(json)
@@ -18,8 +19,9 @@ impl Generator {
         Ok(())
     }
 
+    // Visualize the component tree as a dot file
     pub fn visualize(&self, path: &str) -> Result<(), GeneratorError> {
-        
+        // Check if the root exists
         if let Some(root) = &self.root {
             visualization::generate_dot(&root, path)
         } else { return Err(GeneratorError::NoRoot); }
@@ -27,6 +29,7 @@ impl Generator {
         Ok(())
     }
 
+    // Generate VHDL code from the analyzed JSON string
     pub fn vhdl(&self, path: &str) -> Result<(), GeneratorError> {
         // Separate output path into directory and file name
         let (dir, _) = path.split_at(path.rfind('/').unwrap_or(0));

@@ -34,6 +34,8 @@ pub enum JsonComponent {
     },
 }
 
+// Start the analysis of the parsed JSON
+// Returns the root component
 pub fn analyze(root: &JsonValue) -> Option<JsonComponent> {
     let (root_component, _) = analyze_element(root, 0, 0);
     root_component
