@@ -4,25 +4,31 @@ use super::{JsonComponent, JsonType};
 
 /**********************************************************************************
  * Set of functions to analyze the parsed JSON object into a component structure  *
- * which can be used to generate VHDL code.                                       *
+ * which can be used to generate HDL code.                                        *
  **********************************************************************************/
 
 // Analyze a record of the JSON object
 pub fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
-    let (child, new_inner_nesting) = analyze_element(element, outer_nesting, inner_nesting);
+    let (child, new_inner_nesting) = analyze_element(element, outer_nesting + 1, inner_nesting);
 
-    match child {
-        Some(child) => 
-            (
-                Some(
+    (
+        Some(
+            JsonComponent::Record { 
+                outer_nested: outer_nesting + 1,
+                inner_nested: new_inner_nesting,
+                key: Box::new(
                     JsonComponent::Key {
                         name: key.to_string(),
-                        outer_nested: outer_nesting + 1,
-                        value: Some(Box::new(child)),
+                        outer_nested: outer_nesting + 2,
+                        value: match child {
+                            Some(child) => Some(Box::new(child)),
+                            None => None,
+                        } 
                     }
-            ), new_inner_nesting),
-        None => (None, new_inner_nesting)
-    }
+                )
+            }
+        ), 
+    new_inner_nesting + 1)    
 }
 
 // Analyze the element and recursively call itself if it is an object or array to find nested elements
@@ -99,7 +105,7 @@ pub fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u
             // Analyze all the records of the object
             for key in element.entries() {
                 // Analyze the record
-                let (child, ret_inner_nesting) = analyze_record(key.0, key.1, outer_nesting + 1, inner_nesting);
+                let (child, ret_inner_nesting) = analyze_record(key.0, key.1, outer_nesting, inner_nesting);
                 
                 // Check if the record is not empty
                 match child {
@@ -120,8 +126,6 @@ pub fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u
             (
                 Some(
                     JsonComponent::Object {
-                        outer_nested: outer_nesting + 1,
-                        inner_nested: max_inner_nesting,
                         records: children,
                     }
                 ),

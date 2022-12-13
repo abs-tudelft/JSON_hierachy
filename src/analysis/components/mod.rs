@@ -24,9 +24,12 @@ pub enum JsonComponent {
         value: Option<Box<JsonComponent>>
     },
     Object {
+        records: Vec<JsonComponent>
+    },
+    Record {
         outer_nested: u16,
         inner_nested: u16,
-        records: Vec<JsonComponent>
+        key: Box<JsonComponent>
     },
     Key {
         name: String,

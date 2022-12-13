@@ -253,7 +253,7 @@ impl JsonComponent {
 
                 til
             },
-            JsonComponent::Object { outer_nested, inner_nested, records } => {
+            JsonComponent::Record { outer_nested, inner_nested, key } => {
                 let mut til = String::new();
 
                 let comp_name = name_reg.register("record_parser", *outer_nested);
@@ -300,13 +300,20 @@ impl JsonComponent {
                 // Add trailing new line
                 til.push_str("\n");
 
+                til.push_str(&key.to_til(name_reg, gen_params));
+
+                til
+            },
+            JsonComponent::Object { records } => {
+                let mut til = String::new();
+
                 // Recursively generate TIL for child components
                 for child in records {
                     til.push_str(&child.to_til(name_reg, gen_params));
                 }
 
                 til
-            },
+            }
         }
     }
 }

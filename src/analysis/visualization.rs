@@ -36,7 +36,21 @@ fn update_graph(component: &JsonComponent, parent_id: Option<usize>, graph: &mut
                 update_graph(value, Some(id), graph);
             }
         },
-        JsonComponent::Object { outer_nested, inner_nested, records } => {
+        JsonComponent::Object { records } => {
+            let mut id = parent_id;
+
+            // If parent id is None, this is the root node
+            if parent_id.is_none() {
+                graph.nodes.push("Root".to_string());
+                id = Some(graph.nodes.len() - 1);
+            }
+
+            // If there is a child, recursively call this function on it
+            for record in records {
+                update_graph(record, id, graph);
+            }
+        },
+        JsonComponent::Record { outer_nested, inner_nested, key } => {
             // Add component to the graph
             graph.nodes.push(format!("Record parser\nO: {}, I: {}", outer_nested, inner_nested));
             let id = graph.nodes.len() - 1;
@@ -46,10 +60,7 @@ fn update_graph(component: &JsonComponent, parent_id: Option<usize>, graph: &mut
                 graph.edges.push((parent_id, id));
             }
 
-            // If there is a child, recursively call this function on it
-            for record in records {
-                update_graph(record, Some(id), graph);
-            }
+            update_graph(&key, Some(id), graph)
         },
         JsonComponent::Key { name, outer_nested, value } => {
             // Add component to the graph

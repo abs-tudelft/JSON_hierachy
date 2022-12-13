@@ -186,7 +186,7 @@ impl JsonComponent {
 
                 vhdl
             },
-            JsonComponent::Object { outer_nested, inner_nested, records } => {
+            JsonComponent::Record { outer_nested, inner_nested, key } => {
                 let mut vhdl = String::new();
                 vhdl.push_str(&formatdoc!(
                     "
@@ -220,13 +220,20 @@ impl JsonComponent {
                 // Add trailing new line
                 vhdl.push_str("\n");
 
+                vhdl.push_str(&key.to_vhdl());
+
+                vhdl
+            },
+            JsonComponent::Object { records } => {
+                let mut vhdl = String::new();
+
                 // Recursively generate VHDL for child components
                 for child in records {
                     vhdl.push_str(&child.to_vhdl());
                 }
 
                 vhdl
-            },
+            }
         }
     }
 }

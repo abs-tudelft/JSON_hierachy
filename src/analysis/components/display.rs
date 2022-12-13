@@ -13,7 +13,7 @@ impl fmt::Display for JsonComponent {
         let mut output: String = String::new();
 
         match self {
-            JsonComponent::Object { outer_nested: _, inner_nested:_, records } => {
+            JsonComponent::Object { records } => {
                 for child in records {
                     output.push_str(&format!("{}", child));
                 }
@@ -67,6 +67,19 @@ impl fmt::Display for JsonComponent {
                     
                 write!(f, "{}\n", output)
             },
+            JsonComponent::Record { outer_nested, inner_nested: _, key } => {
+                let mut output: String = String::new();
+
+                for _ in 0..outer_nested-1 {
+                    output.push_str("\t");
+                }
+
+                output.push_str("Record\n");
+
+                output.push_str(&format!("{}", key));
+
+                write!(f, "{}", output)
+            }
         }
     }
 }
