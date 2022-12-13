@@ -5,12 +5,15 @@ use self::components::JsonComponent;
 mod components;
 mod visualization;
 pub mod generator;
+pub mod analyzer;
 pub mod name_reg;
-mod vhdl;
+// mod vhdl;
 mod til;
 
 pub struct Generator {
     root: Option<JsonComponent>,
+    name_map: NameReg,
+    gen_params: GeneratorParams,
 }
 
 pub struct NameReg {

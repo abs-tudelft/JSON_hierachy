@@ -1,47 +1,52 @@
 use json::JsonValue;
 
-use super::{JsonComponent, JsonType};
+use crate::analysis::components::{JsonComponent, JsonType, Record, Key, Value, Array, Object};
 
 /**********************************************************************************
  * Set of functions to analyze the parsed JSON object into a component structure  *
  * which can be used to generate HDL code.                                        *
  **********************************************************************************/
 
+pub fn analyze(root: &JsonValue) -> Option<JsonComponent> {
+    let (root_component, _) = analyze_element(root, 0, 0);
+    root_component
+}
+
 // Analyze a record of the JSON object
-pub fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
+fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<Record>, u16) {
     let (child, new_inner_nesting) = analyze_element(element, outer_nesting + 1, inner_nesting);
 
     (
         Some(
-            JsonComponent::Record { 
-                outer_nested: outer_nesting + 1,
-                inner_nested: new_inner_nesting,
-                key: Box::new(
-                    JsonComponent::Key {
-                        name: key.to_string(),
-                        outer_nested: outer_nesting + 2,
-                        value: match child {
+            Record::new( 
+                outer_nesting + 1,
+                new_inner_nesting,
+                Key::new(
+                        key.to_string(),
+                        outer_nesting + 2,
+                        match child {
                             Some(child) => Some(Box::new(child)),
                             None => None,
                         } 
-                    }
-                )
-            }
+                    )
+            )
         ), 
     new_inner_nesting + 1)    
 }
 
 // Analyze the element and recursively call itself if it is an object or array to find nested elements
-pub fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
+fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
     match element {
         // Element has string type
         JsonValue::Short(_) | JsonValue::String(_) => 
             (
                 Some(
-                    JsonComponent::Value {
-                        data_type: JsonType::String,
-                        outer_nested: outer_nesting, // Strings don't increase the nesting level since the input is a string
-                    }
+                    JsonComponent::Value(
+                        Value::new(
+                            JsonType::String,
+                            outer_nesting, // Strings don't increase the nesting level since the input is a string
+                        )
+                    )
                 ), 
                 // Types don't increase the nesting level
                 inner_nesting
@@ -50,10 +55,12 @@ pub fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u
         JsonValue::Number(_) => 
             (
                 Some(
-                    JsonComponent::Value {
-                        data_type: JsonType::Integer,
-                        outer_nested: outer_nesting + 1,
-                    }
+                    JsonComponent::Value(
+                        Value::new(
+                            JsonType::Integer,
+                            outer_nesting + 1,
+                        )
+                    )
                 ), 
                 // Types don't increase the nesting level
                 inner_nesting
@@ -62,10 +69,12 @@ pub fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u
         JsonValue::Boolean(_) => 
             (
                 Some(
-                    JsonComponent::Value {
-                        data_type: JsonType::Boolean,
-                        outer_nested: outer_nesting + 1,
-                    }
+                    JsonComponent::Value(
+                        Value::new(
+                            JsonType::Boolean,
+                            outer_nesting + 1,
+                        )
+                    )                               
                 ), 
                 // Types don't increase the nesting level
                 inner_nesting
@@ -84,14 +93,16 @@ pub fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u
             // Return the array with the child element
             (
                 Some(
-                    JsonComponent::Array {
-                        outer_nested: outer_nesting + 1,
-                        inner_nested: new_inner_nesting,
-                        value: match child {
-                            Some(component) => Some(Box::new(component)),
-                            None => None,
-                        }
-                    }
+                    JsonComponent::Array(
+                        Array::new(
+                            outer_nesting + 1,
+                            new_inner_nesting,
+                            match child {
+                                Some(component) => Some(Box::new(component)),
+                                None => None,
+                            }
+                        )
+                    )
                 ),
                 // An array increases the inner nesting by 1
                 new_inner_nesting + 1
@@ -99,7 +110,7 @@ pub fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u
         },
         // Element is an object
         JsonValue::Object(_) => {
-            let mut children: Vec<JsonComponent> = Vec::new();
+            let mut children: Vec<Record> = Vec::new();
             let mut new_inner_nesting = Vec::new();
 
             // Analyze all the records of the object
@@ -110,9 +121,9 @@ pub fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u
                 // Check if the record is not empty
                 match child {
                     Some(component) => {
-                        children.push(component)
+                        children.push(component);
                     },
-                    _ => (),
+                    None => (),
                 } 
 
                 // Save the inner nesting level of the record
@@ -125,9 +136,9 @@ pub fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u
             // Return the object with the children
             (
                 Some(
-                    JsonComponent::Object {
-                        records: children,
-                    }
+                    JsonComponent::Object(
+                        Object::new(children)
+                    )
                 ),
                 // An object increases the inner nesting by 1
                 max_inner_nesting + 1

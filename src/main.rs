@@ -30,10 +30,10 @@ fn main() {
     let visualize = true;
 
     // Create a new generator
-    let mut generator = Generator::new();
+    let mut generator = Generator::new(2, 8, 64);
 
     // Analyze the JSON string
-    generator.analyze(_multiple_keys).unwrap();
+    generator.analyze(_simple).unwrap();
     
     if visualize {
         // Visualize the JSON string
@@ -44,5 +44,5 @@ fn main() {
     // generator.vhdl("output/schema.vhdl").unwrap();
 
     // Generate TIL code
-    generator.til("output/schema.til").unwrap();
+    generator.generate("output/schema.til").unwrap();
 }

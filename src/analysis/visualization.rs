@@ -1,4 +1,4 @@
-use super::components::JsonComponent;
+use super::components::{JsonComponent, Generatable};
 
 /**********************************************************************************
  * Implementation of how to rendering the component tree to a dot file            *
@@ -10,73 +10,25 @@ struct Graph { nodes: Vec<String>, edges: Vec<(usize,usize)> }
 
 // Add a JSON component as a new node to the graph
 fn update_graph(component: &JsonComponent, parent_id: Option<usize>, graph: &mut Graph) {
-    match component {
-        JsonComponent::Value { data_type, outer_nested } => {
-            // Add component to the graph
-            graph.nodes.push(format!("{:?} parser\nO: {}", data_type, outer_nested));
-            let id = graph.nodes.len() - 1;
+    let mut id = parent_id;
 
-            // Add an edge from the parent to the current node
-            if let Some(parent_id) = parent_id {
-                graph.edges.push((parent_id, id));
-            }
-        },
-        JsonComponent::Array { outer_nested, inner_nested, value } => {
-            // Add component to the graph
-            graph.nodes.push(format!("Array parser\nO: {}, I: {}", outer_nested, inner_nested));
-            let id = graph.nodes.len() - 1;
+    // Get the label of the node
+    let node_string = component.to_graph_node();
 
-            // Add an edge from the parent to the current node
-            if let Some(parent_id) = parent_id {
-                graph.edges.push((parent_id, id));
-            }
+    // Create a new node if the component has a label
+    if let Some(node_string) = node_string {
+        graph.nodes.push(node_string);
+        let tmp_id = graph.nodes.len() - 1;
 
-            // If there is a child, recursively call this function on it
-            if let Some(value) = value {
-                update_graph(value, Some(id), graph);
-            }
-        },
-        JsonComponent::Object { records } => {
-            let mut id = parent_id;
+        if let Some(parent_id) = parent_id {
+            graph.edges.push((parent_id, tmp_id));
+        }
 
-            // If parent id is None, this is the root node
-            if parent_id.is_none() {
-                graph.nodes.push("Root".to_string());
-                id = Some(graph.nodes.len() - 1);
-            }
+        id = Some(tmp_id);
+    }
 
-            // If there is a child, recursively call this function on it
-            for record in records {
-                update_graph(record, id, graph);
-            }
-        },
-        JsonComponent::Record { outer_nested, inner_nested, key } => {
-            // Add component to the graph
-            graph.nodes.push(format!("Record parser\nO: {}, I: {}", outer_nested, inner_nested));
-            let id = graph.nodes.len() - 1;
-
-            // Add an edge from the parent to the current node
-            if let Some(parent_id) = parent_id {
-                graph.edges.push((parent_id, id));
-            }
-
-            update_graph(&key, Some(id), graph)
-        },
-        JsonComponent::Key { name, outer_nested, value } => {
-            // Add component to the graph
-            graph.nodes.push(format!("Key filter\nMatch: \"{}\"\nO: {}", name, outer_nested));
-            let id = graph.nodes.len() - 1;
-
-            // Add an edge from the parent to the current node
-            if let Some(parent_id) = parent_id {
-                graph.edges.push((parent_id, id));
-            }
-
-            // If there is a child, recursively call this function on it
-            if let Some(value) = value {
-                update_graph(value, Some(id), graph);
-            }
-        },
+    for child in component.get_children() {
+        update_graph(&child, id, graph);
     }
 }
 
