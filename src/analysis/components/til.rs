@@ -23,6 +23,7 @@ impl JsonComponent {
                                 "
                                 type {}InStream = Stream (
                                     data: Bits({}),
+                                    throughput: {},
                                     dimensionality: {},
                                     synchronicity: Sync,
                                     complexity: 8,
@@ -30,6 +31,7 @@ impl JsonComponent {
 
                                 type {}OutStream = Stream (
                                     data: Bits({}),
+                                    throughput: {},
                                     dimensionality: {},
                                     synchronicity: Sync,
                                     complexity: 8,
@@ -41,11 +43,13 @@ impl JsonComponent {
                                 );
                                 ", 
                                 comp_name, 
-                                gen_params.bit_width * gen_params.epc,
+                                gen_params.bit_width,
+                                gen_params.epc,
                                 (outer_nested + 1) * gen_params.epc,
 
                                 comp_name,
-                                gen_params.bit_width * gen_params.epc,
+                                gen_params.bit_width,
+                                gen_params.epc,
                                 (outer_nested + 1) * gen_params.epc,
 
                                 comp_name,
@@ -60,6 +64,7 @@ impl JsonComponent {
                                 "
                                 type {}InStream = Stream (
                                     data: Bits({}),
+                                    throughput: {},
                                     dimensionality: {},
                                     synchronicity: Sync,
                                     complexity: 8,
@@ -67,6 +72,7 @@ impl JsonComponent {
 
                                 type {}OutStream = Stream (
                                     data: Bits({}),
+                                    throughput: 1,
                                     dimensionality: {},
                                     synchronicity: Sync,
                                     complexity: 2,
@@ -78,7 +84,8 @@ impl JsonComponent {
                                 );
                                 ", 
                                 comp_name, 
-                                gen_params.bit_width * gen_params.epc,
+                                gen_params.bit_width,
+                                gen_params.epc,
                                 (outer_nested + 1) * gen_params.epc,
 
                                 comp_name,
@@ -97,6 +104,7 @@ impl JsonComponent {
                                 "
                                 type {}InStream = Stream (
                                     data: Bits({}),
+                                    throughput: {},
                                     dimensionality: {},
                                     synchronicity: Sync,
                                     complexity: 8,
@@ -104,6 +112,7 @@ impl JsonComponent {
 
                                 type {}OutStream = Stream (
                                     data: Bits(1),
+                                    throughput: 1,
                                     dimensionality: {},
                                     synchronicity: Sync,
                                     complexity: 2,
@@ -115,7 +124,8 @@ impl JsonComponent {
                                 );
                                 ", 
                                 comp_name, 
-                                gen_params.bit_width * gen_params.epc,
+                                gen_params.bit_width,
+                                gen_params.epc,
                                 (outer_nested + 1) * gen_params.epc,
 
                                 comp_name,
@@ -143,6 +153,7 @@ impl JsonComponent {
                         "
                         type {}InStream = Stream (
                             data: Bits({}),
+                            throughput: {},
                             dimensionality: {},
                             synchronicity: Sync,
                             complexity: 8,
@@ -150,6 +161,7 @@ impl JsonComponent {
 
                         type {}OutStream = Stream (
                             data: Bits({}),
+                            throughput: {},
                             dimensionality: {},
                             synchronicity: Sync,
                             complexity: 8,
@@ -161,11 +173,13 @@ impl JsonComponent {
                         );
                         ", 
                         comp_name, 
-                        gen_params.bit_width * gen_params.epc,
+                        gen_params.bit_width,
+                        gen_params.epc,
                         (outer_nested + 1) * gen_params.epc,
 
                         comp_name,
-                        gen_params.bit_width * gen_params.epc,
+                        gen_params.bit_width,
+                        gen_params.epc,
                         (outer_nested + 2) * gen_params.epc,
 
                         comp_name,
@@ -194,6 +208,7 @@ impl JsonComponent {
                         "
                         type {}InStream = Stream (
                             data: Bits({}),
+                            throughput: {},
                             dimensionality: {},
                             synchronicity: Sync,
                             complexity: 8,
@@ -201,6 +216,7 @@ impl JsonComponent {
 
                         type {}OutStream = Stream (
                             data: Bits({}),
+                            throughput: {},
                             dimensionality: {},
                             synchronicity: Sync,
                             complexity: 8,
@@ -212,11 +228,13 @@ impl JsonComponent {
                         );
                         ", 
                         comp_name, 
-                        gen_params.bit_width * gen_params.epc,
+                        gen_params.bit_width,
+                        gen_params.epc,
                         (outer_nested + 1) * gen_params.epc,
 
                         comp_name,
-                        gen_params.bit_width * gen_params.epc,
+                        gen_params.bit_width,
+                        gen_params.epc,
                         (outer_nested + 1) * gen_params.epc,
 
                         comp_name,
@@ -244,6 +262,7 @@ impl JsonComponent {
                         "
                         type {}InStream = Stream (
                             data: Bits({}),
+                            throughput: {},
                             dimensionality: {},
                             synchronicity: Sync,
                             complexity: 8,
@@ -251,6 +270,7 @@ impl JsonComponent {
 
                         type {}OutStream = Stream (
                             data: Bits({}),
+                            throughput: {},
                             dimensionality: {},
                             synchronicity: Sync,
                             complexity: 8,
@@ -262,11 +282,13 @@ impl JsonComponent {
                         );
                         ", 
                         comp_name, 
-                        gen_params.bit_width * gen_params.epc,
+                        gen_params.bit_width,
+                        gen_params.epc,
                         (outer_nested + 1) * gen_params.epc,
 
                         comp_name,
-                        gen_params.bit_width * gen_params.epc,
+                        gen_params.bit_width,
+                        gen_params.epc,
                         (outer_nested + 2) * gen_params.epc,
 
                         comp_name,
