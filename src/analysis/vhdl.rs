@@ -12,6 +12,12 @@ pub fn generate_prelude() -> String {
         use ieee.std_logic_1164.all;
         use ieee.numeric_std.all;
 
+        library work;
+        use work.UtilInt_pkg.all;
+        use work.Json_pkg.all;
+        -- use work.battery_status_pkg.all; -- Not implemented yet
+        use work.TestMisc_pkg.all;
+
         entity SchemaParser is
         generic (
             EPC                   : natural := 8;

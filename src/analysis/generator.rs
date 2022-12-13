@@ -1,4 +1,4 @@
-use super::{visualization, components, Generator, vhdl};
+use super::{visualization, components, Generator, vhdl, til, NameReg, GeneratorParams};
 
 impl Generator {
     pub fn new() -> Generator {
@@ -53,6 +53,50 @@ impl Generator {
 
         // Write the postlude
         file.write_fmt(format_args!("{}", vhdl::generate_postlude())).unwrap();
+
+        Ok(())
+    }
+
+    pub fn til(&self, path: &str) -> Result<(), GeneratorError> {
+        // Separate output path into directory and file name
+        let (dir, _) = path.split_at(path.rfind('/').unwrap_or(0));
+
+        // Create the directory if it doesn't exist
+        std::fs::create_dir_all(dir).unwrap();
+
+        // Create the file
+        let mut file = std::fs::File::create(path).unwrap();
+
+        use std::io::Write;
+
+        let mut file_buffer = String::new();
+
+        // Write the prelude
+        file_buffer.push_str(&til::generate_prelude());
+
+        if let Some(root) = &self.root {
+            let mut name_reg = NameReg::new();
+
+            let gen_params = GeneratorParams {
+                epc: 2,
+                bit_width: 8,
+                int_width: 64,
+            };
+
+            let mut til = root.to_til(&mut name_reg, &gen_params);
+
+            // Insert \t at the beginning of each line
+            til = til.replace("\n", "\n\t");
+            // Remove the last \t
+            til.pop();
+
+            file_buffer.push_str(&til);
+        } else { return Err(GeneratorError::NoRoot); }
+
+        // Write the postlude
+        file_buffer.push_str(&til::generate_postlude());
+
+        file.write_fmt(format_args!("{}", file_buffer)).unwrap();
 
         Ok(())
     }

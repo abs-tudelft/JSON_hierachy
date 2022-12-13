@@ -2,6 +2,7 @@ use json::JsonValue;
 use self::analysis::analyze_element;
 
 mod vhdl;
+mod til;
 mod display;
 mod analysis;
 

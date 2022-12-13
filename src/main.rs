@@ -41,5 +41,8 @@ fn main() {
     }
 
     // Generate VHDL code
-    generator.vhdl("output/schema.vhdl").unwrap();
+    // generator.vhdl("output/schema.vhdl").unwrap();
+
+    // Generate TIL code
+    generator.til("output/schema.til").unwrap();
 }
