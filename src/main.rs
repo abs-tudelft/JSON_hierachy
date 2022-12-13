@@ -5,11 +5,11 @@ use analysis::Generator;
 fn main() {
     let _multiple_keys = r#"
     {
-        "voltage":
+        "temperature":
             [{"voltage":1128},{"voltage":1213},{"voltage":1850}],
         "valid":true,
-        "current":
-            {"current": 123}
+        "humidity":
+            [{"voltage":567},{"voltage":234},{"voltage":1230}]
      }
      "#;
 
@@ -33,7 +33,7 @@ fn main() {
     let mut generator = Generator::new();
 
     // Analyze the JSON string
-    generator.analyze(_simple).unwrap();
+    generator.analyze(_multiple_keys).unwrap();
     
     if visualize {
         // Visualize the JSON string

@@ -45,12 +45,12 @@ impl JsonComponent {
                                 comp_name, 
                                 gen_params.bit_width,
                                 gen_params.epc,
-                                (outer_nested + 1) * gen_params.epc,
+                                outer_nested + 1,
 
                                 comp_name,
                                 gen_params.bit_width,
                                 gen_params.epc,
-                                (outer_nested + 1) * gen_params.epc,
+                                outer_nested + 1,
 
                                 comp_name,
                                 comp_name,
@@ -86,7 +86,7 @@ impl JsonComponent {
                                 comp_name, 
                                 gen_params.bit_width,
                                 gen_params.epc,
-                                (outer_nested + 1) * gen_params.epc,
+                                outer_nested + 1,
 
                                 comp_name,
                                 gen_params.int_width,
@@ -126,7 +126,7 @@ impl JsonComponent {
                                 comp_name, 
                                 gen_params.bit_width,
                                 gen_params.epc,
-                                (outer_nested + 1) * gen_params.epc,
+                                outer_nested + 1,
 
                                 comp_name,
                                 outer_nested,
@@ -175,12 +175,12 @@ impl JsonComponent {
                         comp_name, 
                         gen_params.bit_width,
                         gen_params.epc,
-                        (outer_nested + 1) * gen_params.epc,
+                        outer_nested + 1,
 
                         comp_name,
                         gen_params.bit_width,
                         gen_params.epc,
-                        (outer_nested + 2) * gen_params.epc,
+                        outer_nested + 2,
 
                         comp_name,
                         comp_name,
@@ -230,12 +230,12 @@ impl JsonComponent {
                         comp_name, 
                         gen_params.bit_width,
                         gen_params.epc,
-                        (outer_nested + 1) * gen_params.epc,
+                        outer_nested + 1,
 
                         comp_name,
                         gen_params.bit_width,
                         gen_params.epc,
-                        (outer_nested + 1) * gen_params.epc,
+                        outer_nested + 1,
 
                         comp_name,
                         comp_name,
@@ -284,12 +284,12 @@ impl JsonComponent {
                         comp_name, 
                         gen_params.bit_width,
                         gen_params.epc,
-                        (outer_nested + 1) * gen_params.epc,
+                        outer_nested + 1,
 
                         comp_name,
                         gen_params.bit_width,
                         gen_params.epc,
-                        (outer_nested + 2) * gen_params.epc,
+                        outer_nested + 2,
 
                         comp_name,
                         comp_name,
