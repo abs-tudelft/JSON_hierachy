@@ -45,7 +45,12 @@ pub fn generate_dot(root: &JsonComponent, output_path: &str) {
 
     // Create a graph and add the JSON components recursively starting from the root
     let mut graph = Graph { nodes: Vec::new(), edges: Vec::new() };
-    update_graph(root, None, &mut graph);
+    
+    // Add the root node
+    graph.nodes.push("root".to_string());
+    let root_id = graph.nodes.len() - 1;
+
+    update_graph(root, Some(root_id), &mut graph);
 
     // Render the graph to the dot file
     dot::render(&graph, &mut file).unwrap()
