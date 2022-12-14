@@ -5,13 +5,13 @@ pub enum JsonType {
     Boolean,
 }
 
-use crate::analysis::{NameReg, GeneratorParams};
+use crate::analysis::{GenTools, GeneratorParams};
 
 pub trait Generatable {
     fn get_children(&self) -> Vec<JsonComponent>;
 
     fn to_graph_node(&self) -> Option<String>;
-    fn to_til(&self, name_reg: &mut NameReg, gen_params: &GeneratorParams) -> String;
+    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> String;
 }
 
 #[derive(Clone)]
@@ -82,13 +82,13 @@ impl Generatable for JsonComponent {
         }
     }
 
-    fn to_til(&self, name_reg: &mut NameReg, gen_params: &GeneratorParams) -> String {
+    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> String {
         match self {
-            JsonComponent::Value(value) => value.to_til(name_reg, gen_params),
-            JsonComponent::Array(array) => array.to_til(name_reg, gen_params),
-            JsonComponent::Object(object) => object.to_til(name_reg, gen_params),
-            JsonComponent::Record(record) => record.to_til(name_reg, gen_params),
-            JsonComponent::Key(key) => key.to_til(name_reg, gen_params),
+            JsonComponent::Value(value) => value.to_til(gen_tools, gen_params),
+            JsonComponent::Array(array) => array.to_til(gen_tools, gen_params),
+            JsonComponent::Object(object) => object.to_til(gen_tools, gen_params),
+            JsonComponent::Record(record) => record.to_til(gen_tools, gen_params),
+            JsonComponent::Key(key) => key.to_til(gen_tools, gen_params),
         }
     }
 }

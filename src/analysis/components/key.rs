@@ -1,6 +1,6 @@
 use indoc::formatdoc;
 
-use crate::analysis::{NameReg, GeneratorParams};
+use crate::analysis::{GeneratorParams, gen_tools::GenTools};
 
 use super::{Key, Generatable, JsonComponent};
 
@@ -15,8 +15,11 @@ impl Key {
 }
 
 impl Generatable for Key {
-    fn to_til(&self, name_reg: &mut NameReg, gen_params: &GeneratorParams) -> String {
-        let comp_name = name_reg.register(&format!("{}_key_filter", self.name), self.outer_nested);
+    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> String {
+        let comp_name = gen_tools.name_map.register(&format!("{}_key_filter", self.name), self.outer_nested);
+
+        // Generate a matcher
+        gen_tools.match_manager.add_matcher(&self.name, gen_params);
 
         formatdoc!(
             "

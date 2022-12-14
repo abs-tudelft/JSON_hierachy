@@ -1,0 +1,3 @@
+[submodule "src/analysis/vhdre/python"]
+	path = src/analysis/vhdre/vhdre
+	url = https://github.com/jhaenen/vhdre/

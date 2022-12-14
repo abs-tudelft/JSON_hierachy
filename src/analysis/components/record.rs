@@ -1,6 +1,6 @@
 use indoc::formatdoc;
 
-use crate::analysis::{NameReg, GeneratorParams};
+use crate::analysis::{GenTools, GeneratorParams};
 
 use super::{Record, JsonComponent, Generatable, Key};
 
@@ -15,8 +15,8 @@ impl Record {
 }
 
 impl Generatable for Record {
-    fn to_til(&self, name_reg: &mut NameReg, gen_params: &GeneratorParams) -> String {
-        let comp_name = name_reg.register("record_parser", self.outer_nested);
+    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> String {
+        let comp_name = gen_tools.name_map.register("record_parser", self.outer_nested);
 
         formatdoc!(
             "

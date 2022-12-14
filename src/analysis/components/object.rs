@@ -1,4 +1,4 @@
-use crate::analysis::{NameReg, GeneratorParams};
+use crate::analysis::{GeneratorParams, gen_tools::GenTools};
 
 use super::{Object, JsonComponent, Generatable, Record};
 
@@ -11,7 +11,7 @@ impl Object {
 }
 
 impl Generatable for Object {
-    fn to_til(&self, _name_reg: &mut NameReg, _gen_params: &GeneratorParams) -> String {
+    fn to_til(&self, _name_reg: &mut GenTools, _gen_params: &GeneratorParams) -> String {
         String::from("")
     }
 

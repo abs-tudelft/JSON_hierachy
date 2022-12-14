@@ -1,6 +1,6 @@
 use indoc::formatdoc;
 
-use crate::analysis::{NameReg, GeneratorParams};
+use crate::analysis::{GenTools, GeneratorParams};
 
 use super::{Array, JsonComponent, Generatable};
 
@@ -15,8 +15,8 @@ impl Array {
 }
 
 impl Generatable for Array {
-    fn to_til(&self, name_reg: &mut NameReg, gen_params: &GeneratorParams) -> String {
-        let comp_name = name_reg.register("array_parser", self.outer_nested);
+    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> String {
+        let comp_name = gen_tools.name_map.register("array_parser", self.outer_nested);
 
         formatdoc!(
             "

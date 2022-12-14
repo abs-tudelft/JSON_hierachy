@@ -1,27 +1,23 @@
-use std::collections::HashMap;
-
-use self::components::JsonComponent;
+use self::{components::JsonComponent, gen_tools::GenTools};
 
 mod components;
 mod visualization;
 pub mod generator;
 pub mod analyzer;
-pub mod name_reg;
+pub mod gen_tools;
 // mod vhdl;
 mod til;
 
+
 pub struct Generator {
     root: Option<JsonComponent>,
-    name_map: NameReg,
+    gen_tools: GenTools,
     gen_params: GeneratorParams,
-}
-
-pub struct NameReg {
-    name_map: HashMap<String, u32>,
 }
 
 pub struct GeneratorParams {
     epc: u16,
     bit_width: u16,
     int_width: u16,
+    output_dir: String,
 }

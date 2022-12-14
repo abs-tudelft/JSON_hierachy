@@ -1,14 +1,15 @@
-use super::{visualization, Generator, NameReg, GeneratorParams, analyzer};
+use super::{visualization, Generator, GenTools, GeneratorParams, analyzer};
 
 impl Generator {
     pub fn new(epc: u16, bit_width: u16, int_width: u16) -> Generator {
         Generator {
             root: None,
-            name_map: NameReg::new(),
+            gen_tools: GenTools::new(),
             gen_params: GeneratorParams {
                 epc,
                 bit_width,
                 int_width,
+                output_dir: String::from(""),
             },
         }
     }
@@ -41,6 +42,9 @@ impl Generator {
     pub fn generate(&mut self, path: &str) -> Result<(), GeneratorError> {
         // Separate output path into directory and file name
         let (dir, _) = path.split_at(path.rfind('/').unwrap_or(0));
+
+        // Set the output directory
+        self.gen_params.output_dir = String::from(dir);
 
         // Create the directory if it doesn't exist
         std::fs::create_dir_all(dir).unwrap();

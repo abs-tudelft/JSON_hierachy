@@ -1,6 +1,6 @@
 use indoc::formatdoc;
 
-use crate::analysis::{NameReg, GeneratorParams};
+use crate::analysis::{GeneratorParams, gen_tools::GenTools};
 
 use super::{JsonComponent, JsonType, Value, Generatable};
 
@@ -14,10 +14,10 @@ impl Value {
 }
 
 impl Generatable for Value {
-    fn to_til(&self, name_reg: &mut NameReg, gen_params: &GeneratorParams) -> String {
+    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> String {
         match self.data_type {
             JsonType::String => {
-                let comp_name = name_reg.register("string_parser", self.outer_nested);
+                let comp_name = gen_tools.name_map.register("string_parser", self.outer_nested);
 
                 formatdoc!(
                     "
@@ -58,7 +58,7 @@ impl Generatable for Value {
                 )
             },
             JsonType::Integer => {
-                let comp_name = name_reg.register("int_parser", self.outer_nested);
+                let comp_name = gen_tools.name_map.register("int_parser", self.outer_nested);
 
                 formatdoc!(
                     "
@@ -98,7 +98,7 @@ impl Generatable for Value {
                 )
             },
             JsonType::Boolean => {
-                let comp_name = name_reg.register("bool_parser", self.outer_nested);
+                let comp_name = gen_tools.name_map.register("bool_parser", self.outer_nested);
 
                 formatdoc!(
                     "
