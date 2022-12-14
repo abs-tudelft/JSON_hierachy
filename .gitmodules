@@ -1,0 +1,3 @@
+[submodule "src/analysis/gen_tools/matcher/vhdre"]
+	path = src/analysis/gen_tools/matcher/vhdre
+	url = https://github.com/jhaenen/vhdre/
