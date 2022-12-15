@@ -15,10 +15,10 @@ impl Record {
 }
 
 impl Generatable for Record {
-    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> String {
+    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
         let comp_name = gen_tools.name_map.register("record_parser", self.outer_nested);
 
-        formatdoc!(
+        let til = formatdoc!(
             "
             type {}InStream = Stream (
                 data: Bits({}),
@@ -54,7 +54,9 @@ impl Generatable for Record {
             comp_name,
             comp_name,
             comp_name,
-        )
+        );
+
+        (Some(comp_name), Some(til))
     }
 
     fn to_graph_node(&self) -> Option<String> {

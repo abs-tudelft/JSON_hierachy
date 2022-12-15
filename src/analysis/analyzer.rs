@@ -1,6 +1,6 @@
 use json::JsonValue;
 
-use crate::analysis::components::{JsonComponent, JsonType, Record, Key, Value, Array, Object};
+use crate::analysis::components::{JsonComponent, JsonType, Record, Key, Value, Array, Object, Matcher};
 
 /**********************************************************************************
  * Set of functions to analyze the parsed JSON object into a component structure  *
@@ -22,7 +22,7 @@ fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nest
                 outer_nesting + 1,
                 new_inner_nesting,
                 Key::new(
-                        key.to_string(),
+                        Matcher::new(key.to_string(), outer_nesting + 2),
                         outer_nesting + 2,
                         match child {
                             Some(child) => Some(Box::new(child)),

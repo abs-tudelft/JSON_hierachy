@@ -11,7 +11,11 @@ pub trait Generatable {
     fn get_children(&self) -> Vec<JsonComponent>;
 
     fn to_graph_node(&self) -> Option<String>;
-    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> String;
+
+    /// Generates the TIL for the component
+    /// 
+    /// Returns a tuple of (component_name, til_streamlet_definition)
+    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>);
 }
 
 #[derive(Clone)]
@@ -20,7 +24,8 @@ pub enum JsonComponent {
     Array(Array),
     Object(Object),
     Record(Record),
-    Key(Key)
+    Key(Key),
+    Matcher(Matcher),
 }
 
 mod value;
@@ -55,9 +60,16 @@ pub struct Record {
 mod key;
 #[derive(Clone)]
 pub struct Key {
-    name: String,
+    matcher: Matcher,
     outer_nested: u16,
     value: Option<Box<JsonComponent>>
+}
+
+mod matcher;
+#[derive(Clone)]
+pub struct Matcher {
+    matcher: String,
+    outer_nested: u16
 }
 
 // Pass through to the underlying implementation
@@ -69,6 +81,7 @@ impl Generatable for JsonComponent {
             JsonComponent::Object(object) => object.get_children(),
             JsonComponent::Record(record) => record.get_children(),
             JsonComponent::Key(key) => key.get_children(),
+            JsonComponent::Matcher(matcher) => matcher.get_children(),
         }
     }
 
@@ -79,16 +92,18 @@ impl Generatable for JsonComponent {
             JsonComponent::Object(object) => object.to_graph_node(),
             JsonComponent::Record(record) => record.to_graph_node(),
             JsonComponent::Key(key) => key.to_graph_node(),
+            JsonComponent::Matcher(matcher) => matcher.to_graph_node(),
         }
     }
 
-    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> String {
+    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
         match self {
             JsonComponent::Value(value) => value.to_til(gen_tools, gen_params),
             JsonComponent::Array(array) => array.to_til(gen_tools, gen_params),
             JsonComponent::Object(object) => object.to_til(gen_tools, gen_params),
             JsonComponent::Record(record) => record.to_til(gen_tools, gen_params),
             JsonComponent::Key(key) => key.to_til(gen_tools, gen_params),
+            JsonComponent::Matcher(matcher) => matcher.to_til(gen_tools, gen_params),
         }
     }
 }

@@ -14,10 +14,12 @@ impl Value {
 }
 
 impl Generatable for Value {
-    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> String {
-        match self.data_type {
+    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
+        let comp_name: String;
+
+        let til = match self.data_type {
             JsonType::String => {
-                let comp_name = gen_tools.name_map.register("string_parser", self.outer_nested);
+                comp_name = gen_tools.name_map.register("string_parser", self.outer_nested);
 
                 formatdoc!(
                     "
@@ -58,7 +60,7 @@ impl Generatable for Value {
                 )
             },
             JsonType::Integer => {
-                let comp_name = gen_tools.name_map.register("int_parser", self.outer_nested);
+                comp_name = gen_tools.name_map.register("int_parser", self.outer_nested);
 
                 formatdoc!(
                     "
@@ -98,7 +100,7 @@ impl Generatable for Value {
                 )
             },
             JsonType::Boolean => {
-                let comp_name = gen_tools.name_map.register("bool_parser", self.outer_nested);
+                comp_name = gen_tools.name_map.register("bool_parser", self.outer_nested);
 
                 formatdoc!(
                     "
@@ -136,7 +138,9 @@ impl Generatable for Value {
                     comp_name,
                 )
             }
-        }
+        };
+
+        (Some(comp_name), Some(til))
     }
 
     fn to_graph_node(&self) -> Option<String> {

@@ -11,8 +11,8 @@ impl Object {
 }
 
 impl Generatable for Object {
-    fn to_til(&self, _name_reg: &mut GenTools, _gen_params: &GeneratorParams) -> String {
-        String::from("")
+    fn to_til(&self, _gen_tools: &mut GenTools, _gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
+        (None, None)
     }
 
     fn to_graph_node(&self) -> Option<String> {

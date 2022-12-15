@@ -2,12 +2,12 @@ use indoc::formatdoc;
 
 use crate::analysis::{GeneratorParams, gen_tools::GenTools};
 
-use super::{Key, Generatable, JsonComponent};
+use super::{Key, Generatable, JsonComponent, Matcher};
 
 impl Key {
-    pub fn new(name: String, outer_nested: u16, value: Option<Box<JsonComponent>>) -> Key {
+    pub fn new(matcher: Matcher, outer_nested: u16, value: Option<Box<JsonComponent>>) -> Key {
         Key {
-            name,
+            matcher,
             outer_nested,
             value
         }
@@ -15,13 +15,10 @@ impl Key {
 }
 
 impl Generatable for Key {
-    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> String {
-        let comp_name = gen_tools.name_map.register(&format!("{}_key_filter", self.name), self.outer_nested);
+    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
+        let comp_name = gen_tools.name_map.register("key_filter", self.outer_nested);
 
-        // Generate a matcher
-        gen_tools.match_manager.add_matcher(&self.name, gen_params);
-
-        formatdoc!(
+        let til = formatdoc!(
             "
             type {}InStream = Stream (
                 data: Bits({}),
@@ -57,19 +54,21 @@ impl Generatable for Key {
             comp_name,
             comp_name,
             comp_name,
-        )
+        );
+
+        (Some(comp_name), Some(til))
     }
 
     fn to_graph_node(&self) -> Option<String> {
         Some(
-            format!("Key filter\nMatch: \"{}\"\nO: {}", self.name, self.outer_nested)
+            format!("Key filter\nO: {}", self.outer_nested)
         )
     }
 
     fn get_children(&self) -> Vec<JsonComponent> {
         match &self.value {
-            Some(child) => vec![*child.clone()],
-            None => vec![],
+            Some(child) => vec![JsonComponent::Matcher(self.matcher.clone()), *child.clone()],
+            None => vec![JsonComponent::Matcher(self.matcher.clone())],
         }
     }
 }

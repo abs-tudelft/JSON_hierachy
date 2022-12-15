@@ -33,7 +33,7 @@ fn main() {
     let mut generator = Generator::new(2, 8, 64);
 
     // Analyze the JSON string
-    generator.analyze(_multiple_keys).unwrap();
+    generator.analyze(_simple).unwrap();
     
     if visualize {
         // Visualize the JSON string

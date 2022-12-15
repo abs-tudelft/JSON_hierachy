@@ -9,12 +9,19 @@ impl MatcherManager {
         }
     }
 
+    /// Add a matcher to the list of matchers
     pub fn add_matcher(&mut self, matcher: &String, gen_params: &GeneratorParams) {
+        let exists = self.matchers.contains(matcher);
+
         // Check if the matcher is already in the list
-        if !self.matchers.contains(matcher) {
+        if !exists {
             self.matchers.push(matcher.to_string());
             self.generate_matcher(matcher, gen_params);
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.matchers.is_empty()
     }
 
     fn generate_matcher(&self, matcher: &str, gen_params: &GeneratorParams) {
