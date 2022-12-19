@@ -61,7 +61,7 @@ impl Generatable for Matcher {
             formatdoc!(
                 "
                 {}.matcherOut -- {}.input;
-                {}.output -- {}.MatcherIn;
+                {}.output -- {}.matcherIn;
                 ", 
                 parent_name, 
                 component_name,

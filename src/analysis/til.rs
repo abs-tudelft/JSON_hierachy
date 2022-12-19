@@ -33,10 +33,10 @@ fn generate_top_component(instances: String, interconnects: String, gen_params: 
         );
 
         streamlet Top = (
-            input: TopInStream,
-            output: TopOutStream,
+            input: in TopInStream,
+            output: out TopOutStream,
         ) {{
-            impl {{
+            impl: {{
                 {}
                 {}
             }}
