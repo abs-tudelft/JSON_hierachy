@@ -24,10 +24,7 @@ fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nest
                 Key::new(
                         Matcher::new(key.to_string(), outer_nesting + 2),
                         outer_nesting + 2,
-                        match child {
-                            Some(child) => Some(Box::new(child)),
-                            None => None,
-                        } 
+                        child.map(Box::new)
                     )
             )
         ), 
@@ -97,10 +94,7 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
                         Array::new(
                             outer_nesting + 1,
                             new_inner_nesting,
-                            match child {
-                                Some(component) => Some(Box::new(component)),
-                                None => None,
-                            }
+                            child.map(Box::new)
                         )
                     )
                 ),
@@ -118,13 +112,10 @@ fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) 
                 // Analyze the record
                 let (child, ret_inner_nesting) = analyze_record(key.0, key.1, outer_nesting, inner_nesting);
                 
-                // Check if the record is not empty
-                match child {
-                    Some(component) => {
-                        children.push(component);
-                    },
-                    None => (),
-                } 
+                // Push record if it is not None
+                if let Some(component) = child {
+                    children.push(component);
+                }
 
                 // Save the inner nesting level of the record
                 new_inner_nesting.push(ret_inner_nesting);

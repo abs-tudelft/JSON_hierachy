@@ -19,7 +19,7 @@ impl Generator {
         // Deserialize the JSON string
         let parsed = json::parse(json)
         // In case of error, return the error
-        .map_err(|e| GeneratorError::JsonError(e))?; 
+        .map_err(GeneratorError::JsonError)?; 
 
         self.root = analyzer::analyze(&parsed);
 

@@ -20,10 +20,6 @@ impl MatcherManager {
         }
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.matchers.is_empty()
-    }
-
     fn generate_matcher(&self, matcher: &str, gen_params: &GeneratorParams) {
         use pyo3::prelude::*;
         
@@ -31,7 +27,7 @@ impl MatcherManager {
 
         // Create the Python interpreter
         match Python::with_gil(|py| -> PyResult<String> {
-            let vhdre = PyModule::from_code(py, &code, "vhdre/__init__.py", "vhdre")?;
+            let vhdre = PyModule::from_code(py, code, "vhdre/__init__.py", "vhdre")?;
 
             let regex_class = vhdre.getattr("RegexMatcher")?;
             let regex = regex_class.call1((format!("{}_matcher", matcher), matcher))?;

@@ -15,48 +15,98 @@ impl Key {
 }
 
 impl Generatable for Key {
-    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
+    fn to_til_component(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
         let comp_name = gen_tools.name_map.register("key_filter", self.outer_nested);
 
-        let til = formatdoc!(
-            "
-            type {}InStream = Stream (
-                data: Bits({}),
-                throughput: {},
-                dimensionality: {},
-                synchronicity: Sync,
-                complexity: 8,
+        let mut til = String::new();
+
+        // Type generation
+        // Register the matcher type
+        let type_exists = gen_tools.type_reg.register("MatcherStream");
+        if !type_exists {
+            til.push_str(
+                &formatdoc!(
+                    "
+                    type MatcherStream = Stream (
+                        data: Bits(1),
+                        throughput: {},
+                        dimensionality: 1,
+                        synchronicity: Sync,
+                        complexity: 8,
+                    );\n
+                ", gen_params.epc)
             );
+        }
 
-            type {}OutStream = Stream (
-                data: Bits({}),
-                throughput: {},
-                dimensionality: {},
-                synchronicity: Sync,
-                complexity: 8,
-            );
+        // Register the key type
+        // Keys cannot be registered yet due not being generic
+        // let type_exists = gen_tools.type_reg.register(&format!("KeyStream");
+        // if !type_exists {
+        //     Here comes the key stream type
+        // }
+        //
+        // Fall back for now:
+        til.push_str(
+            &formatdoc!(
+                "
+                type {}InStream = Stream (
+                    data: Bits({}),
+                    throughput: {},
+                    dimensionality: {},
+                    synchronicity: Sync,
+                    complexity: 8,
+                );
 
-            streamlet {} = (
-                input: in {}InStream,
-                output: out {}OutStream,
-            );
-            ", 
-            comp_name, 
-            gen_params.bit_width,
-            gen_params.epc,
-            self.outer_nested + 1,
+                type {}OutStream = Stream (
+                    data: Bits({}),
+                    throughput: {},
+                    dimensionality: {},
+                    synchronicity: Sync,
+                    complexity: 8,
+                );
+                ", 
+                comp_name, 
+                gen_params.bit_width,
+                gen_params.epc,
+                self.outer_nested + 1,
+    
+                comp_name,
+                gen_params.bit_width,
+                gen_params.epc,
+                self.outer_nested + 1
+            )
+        );
 
-            comp_name,
-            gen_params.bit_width,
-            gen_params.epc,
-            self.outer_nested + 1,
-
-            comp_name,
-            comp_name,
-            comp_name,
+        // Component definition
+        til.push_str(
+            &formatdoc!(
+                "
+                streamlet {} = (
+                    input: in {}InStream,
+                    matcherIn: in MatcherStream,
+                    matcherOut: out MatcherStream,
+                    output: out {}OutStream,
+                );
+                ",
+                comp_name,
+                comp_name,
+                comp_name,
+            )
         );
 
         (Some(comp_name), Some(til))
+    }
+
+    fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
+        Some(
+            formatdoc!(
+                "
+                {}.output -- {}.input ;
+                ",
+                parent_name,
+                component_name,
+            )
+        )
     }
 
     fn to_graph_node(&self) -> Option<String> {

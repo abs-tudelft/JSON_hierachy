@@ -15,7 +15,7 @@ impl Record {
 }
 
 impl Generatable for Record {
-    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
+    fn to_til_component(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
         let comp_name = gen_tools.name_map.register("record_parser", self.outer_nested);
 
         let til = formatdoc!(
@@ -57,6 +57,18 @@ impl Generatable for Record {
         );
 
         (Some(comp_name), Some(til))
+    }
+
+    fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
+        Some(
+            formatdoc!(
+                "
+                {}.output -- {}.input ;
+                ",
+                parent_name,
+                component_name,
+            )
+        )
     }
 
     fn to_graph_node(&self) -> Option<String> {

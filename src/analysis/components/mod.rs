@@ -15,7 +15,12 @@ pub trait Generatable {
     /// Generates the TIL for the component
     /// 
     /// Returns a tuple of (component_name, til_streamlet_definition)
-    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>);
+    fn to_til_component(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>);
+
+    /// Generates the signal connenction for the component
+    /// 
+    /// Returns an optional string with the signal connections
+    fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String>;
 }
 
 #[derive(Clone)]
@@ -85,6 +90,17 @@ impl Generatable for JsonComponent {
         }
     }
 
+    fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
+        match self {
+            JsonComponent::Value(value) => value.to_til_signal(component_name, parent_name),
+            JsonComponent::Array(array) => array.to_til_signal(component_name, parent_name),
+            JsonComponent::Object(object) => object.to_til_signal(component_name, parent_name),
+            JsonComponent::Record(record) => record.to_til_signal(component_name, parent_name),
+            JsonComponent::Key(key) => key.to_til_signal(component_name, parent_name),
+            JsonComponent::Matcher(matcher) => matcher.to_til_signal(component_name, parent_name),
+        }
+    }
+
     fn to_graph_node(&self) -> Option<String> {
         match self {
             JsonComponent::Value(value) => value.to_graph_node(),
@@ -96,14 +112,14 @@ impl Generatable for JsonComponent {
         }
     }
 
-    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
+    fn to_til_component(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
         match self {
-            JsonComponent::Value(value) => value.to_til(gen_tools, gen_params),
-            JsonComponent::Array(array) => array.to_til(gen_tools, gen_params),
-            JsonComponent::Object(object) => object.to_til(gen_tools, gen_params),
-            JsonComponent::Record(record) => record.to_til(gen_tools, gen_params),
-            JsonComponent::Key(key) => key.to_til(gen_tools, gen_params),
-            JsonComponent::Matcher(matcher) => matcher.to_til(gen_tools, gen_params),
+            JsonComponent::Value(value) => value.to_til_component(gen_tools, gen_params),
+            JsonComponent::Array(array) => array.to_til_component(gen_tools, gen_params),
+            JsonComponent::Object(object) => object.to_til_component(gen_tools, gen_params),
+            JsonComponent::Record(record) => record.to_til_component(gen_tools, gen_params),
+            JsonComponent::Key(key) => key.to_til_component(gen_tools, gen_params),
+            JsonComponent::Matcher(matcher) => matcher.to_til_component(gen_tools, gen_params),
         }
     }
 }

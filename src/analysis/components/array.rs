@@ -15,7 +15,7 @@ impl Array {
 }
 
 impl Generatable for Array {
-    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
+    fn to_til_component(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
         let comp_name = gen_tools.name_map.register("array_parser", self.outer_nested);        
 
         // Generate til for this component
@@ -58,6 +58,18 @@ impl Generatable for Array {
         );
 
         (Some(comp_name), Some(til))
+    }
+
+    fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
+        Some(
+            formatdoc!(
+                "
+                {}.output -- {}.input ;
+                ",
+                parent_name,
+                component_name,
+            )
+        )
     }
 
     fn to_graph_node(&self) -> Option<String> {

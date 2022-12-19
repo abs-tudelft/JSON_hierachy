@@ -14,7 +14,7 @@ impl Value {
 }
 
 impl Generatable for Value {
-    fn to_til(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
+    fn to_til_component(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
         let comp_name: String;
 
         let til = match self.data_type {
@@ -141,6 +141,18 @@ impl Generatable for Value {
         };
 
         (Some(comp_name), Some(til))
+    }
+
+    fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
+        Some(
+            formatdoc!(
+                "
+                {}.output -- {}.input ;
+                ",
+                parent_name,
+                component_name,
+            )
+        )
     }
 
     fn to_graph_node(&self) -> Option<String> {

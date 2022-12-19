@@ -11,8 +11,12 @@ impl Object {
 }
 
 impl Generatable for Object {
-    fn to_til(&self, _gen_tools: &mut GenTools, _gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
+    fn to_til_component(&self, _gen_tools: &mut GenTools, _gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
         (None, None)
+    }
+
+    fn to_til_signal(&self, _component_name: &str, _parent_name: &str) -> Option<String> {
+        None
     }
 
     fn to_graph_node(&self) -> Option<String> {
@@ -26,6 +30,6 @@ impl Generatable for Object {
             children.push(JsonComponent::Record(record.clone()));
         }
 
-        return children;
+        children
     }
 }
