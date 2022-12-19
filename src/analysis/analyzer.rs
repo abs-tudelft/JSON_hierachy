@@ -13,7 +13,7 @@ pub fn analyze(root: &JsonValue) -> Option<JsonComponent> {
 }
 
 // Analyze a record of the JSON object
-fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<Record>, u16) {
+fn analyze_record(key: &str, element: &JsonValue, outer_nesting: usize, inner_nesting: usize) -> (Option<Record>, usize) {
     let (child, new_inner_nesting) = analyze_element(element, outer_nesting + 1, inner_nesting);
 
     (
@@ -32,7 +32,7 @@ fn analyze_record(key: &str, element: &JsonValue, outer_nesting: u16, inner_nest
 }
 
 // Analyze the element and recursively call itself if it is an object or array to find nested elements
-fn analyze_element(element: &JsonValue, outer_nesting: u16, inner_nesting: u16) -> (Option<JsonComponent>, u16) {
+fn analyze_element(element: &JsonValue, outer_nesting: usize, inner_nesting: usize) -> (Option<JsonComponent>, usize) {
     match element {
         // Element has string type
         JsonValue::Short(_) | JsonValue::String(_) => 

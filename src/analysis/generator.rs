@@ -1,7 +1,7 @@
 use super::{visualization, Generator, GenTools, GeneratorParams, analyzer};
 
 impl Generator {
-    pub fn new(epc: u16, bit_width: u16, int_width: u16) -> Generator {
+    pub fn new(epc: usize, bit_width: usize, int_width: usize) -> Generator {
         Generator {
             root: None,
             gen_tools: GenTools::new(),

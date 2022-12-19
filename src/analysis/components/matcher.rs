@@ -1,76 +1,75 @@
-use indoc::formatdoc;
+use crate::analysis::{GeneratorParams, types::{TilStreamType, Synchronicity, TilStreamingInterface}, gen_tools::TypeManager};
 
-use crate::analysis::{gen_tools::GenTools, GeneratorParams};
-
-use super::{JsonComponent, Matcher, Generatable};
+use super::{JsonComponent, Matcher, Generatable, JsonComponentValue};
 
 impl Matcher {
-    pub fn new(matcher: String, outer_nested: u16) -> Matcher {
+    pub fn new(matcher: String, outer_nested: usize) -> Matcher {
         Matcher {
             matcher,
             outer_nested
         }
     }
+
+    pub fn get_matcher(&self) -> &str {
+        &self.matcher
+    }
 }
 
 impl Generatable for Matcher {
-    fn to_til_component(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
-        let comp_name = gen_tools.name_map.register(&format!("{}_matcher", self.matcher), self.outer_nested);
-
-        // Generate the matcher
-        gen_tools.match_manager.add_matcher(&self.matcher, gen_params);
-
-        let mut til = String::new();
+    fn get_streaming_interface(&self, component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface {
+        let mut interface = TilStreamingInterface::new();
 
         // Type generation
-        // Register the matcher type
-        let type_exists = gen_tools.type_reg.register("MatcherStream");
-        if !type_exists {
-            til.push_str(
-                &formatdoc!(
-                    "
-                    type MatcherStream = Stream (
-                        data: Bits(1),
-                        throughput: {},
-                        dimensionality: 1,
-                        synchronicity: Sync,
-                        complexity: 8,
-                    );\n
-                ", gen_params.epc)
-            );
-        }
-
-        // Component generation
-        til.push_str(
-            &formatdoc!(
-                "
-                streamlet {} = (
-                    input: in MatcherStream,
-                    output: out MatcherStream,
-                );
-                ", 
-                comp_name
-            )
+        let matcher_type = TilStreamType::new(
+            "MatcherStream",
+            1,
+            gen_params.epc,
+            1,
+            Synchronicity::Sync,
+            8,
         );
 
-        (Some(comp_name), Some(til))
+        // Register the matcher type
+        type_manager.register(matcher_type.clone());
+        interface.add_input_stream("input", matcher_type.clone());
+        interface.add_output_stream("output", matcher_type);
+
+        interface
     }
 
-    fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
-        Some(
-            formatdoc!(
-                "
-                {}.matcherOut -- {}.input;
-                {}.output -- {}.matcherIn;
-                ", 
-                parent_name, 
-                component_name,
-                component_name,
-                parent_name                
-            )
-        )
+    fn get_preffered_name(&self) -> String {
+        format!("{}_matcher", self.matcher)
     }
 
+    fn get_nesting_level(&self) -> usize {
+        self.outer_nested
+    }
+
+    // fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
+    //     Some(
+    //         formatdoc!(
+    //             "
+    //             {}.matcherOut -- {}.input;
+    //             {}.output -- {}.matcherIn;
+    //             ", 
+    //             parent_name, 
+    //             component_name,
+    //             component_name,
+    //             parent_name                
+    //         )
+    //     )
+    // }
+
+    // fn to_til_top_input_signal(&self, _component_name: &str, _top_input_name: &str) -> Option<String> {
+    //     None
+    // }
+
+    // fn to_til_top_output_signal(&self, _component_name: &str, _top_output_name: &str) -> Option<String> {
+    //     None
+    // }
+}
+
+impl JsonComponentValue for Matcher {
     fn to_graph_node(&self) -> Option<String> {
         Some(
             format!("Regex matcher\n\"{}\"", self.matcher)
@@ -79,5 +78,9 @@ impl Generatable for Matcher {
 
     fn get_children(&self) -> Vec<JsonComponent> {
         Vec::new()
+    }
+
+    fn num_children(&self) -> usize {
+        0
     }
 }

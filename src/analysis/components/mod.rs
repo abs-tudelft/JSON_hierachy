@@ -5,22 +5,43 @@ pub enum JsonType {
     Boolean,
 }
 
-use crate::analysis::{GenTools, GeneratorParams};
+use crate::analysis::{GeneratorParams};
+
+use super::{types::{TilStreamingInterface}, gen_tools::TypeManager};
 
 pub trait Generatable {
-    fn get_children(&self) -> Vec<JsonComponent>;
-
-    fn to_graph_node(&self) -> Option<String>;
+    
 
     /// Generates the TIL for the component
     /// 
     /// Returns a tuple of (component_name, til_streamlet_definition)
-    fn to_til_component(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>);
+    
 
-    /// Generates the signal connenction for the component
-    /// 
-    /// Returns an optional string with the signal connections
-    fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String>;
+    fn get_streaming_interface(&self, component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface;
+    fn get_preffered_name(&self) -> String;
+    fn get_nesting_level(&self) -> usize;
+
+    // /// Generates the signal connenction for the component
+    // /// 
+    // /// Returns an optional string with the signal connections
+    // fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String>;
+
+    // /// Generates the input signal connection to the top component
+    // /// 
+    // /// Returns an optional string with the signal connections
+    // fn to_til_top_input_signal(&self, component_name: &str, top_input_name: &str) -> Option<String>;
+
+    // /// Generates the output signal connection to the top component
+    // /// 
+    // /// Returns an optional string with the signal connections
+    // fn to_til_top_output_signal(&self, component_name: &str, top_output_name: &str) -> Option<String>;
+}
+
+pub trait JsonComponentValue {
+    fn get_children(&self) -> Vec<JsonComponent>;
+    fn num_children(&self) -> usize;
+
+    fn to_graph_node(&self) -> Option<String>;
 }
 
 #[derive(Clone)]
@@ -37,14 +58,14 @@ mod value;
 #[derive(Clone)]
 pub struct Value {
     data_type: JsonType,
-    outer_nested: u16
+    outer_nested: usize
 }
 
 mod array;
 #[derive(Clone)]
 pub struct Array {
-    outer_nested: u16,
-    inner_nested: u16,
+    outer_nested: usize,
+    inner_nested: usize,
     value: Option<Box<JsonComponent>>
 }
 
@@ -57,8 +78,8 @@ pub struct Object {
 mod record;
 #[derive(Clone)]
 pub struct Record {
-    outer_nested: u16,
-    inner_nested: u16,
+    outer_nested: usize,
+    inner_nested: usize,
     key: Key
 }
 
@@ -66,7 +87,7 @@ mod key;
 #[derive(Clone)]
 pub struct Key {
     matcher: Matcher,
-    outer_nested: u16,
+    outer_nested: usize,
     value: Option<Box<JsonComponent>>
 }
 
@@ -74,11 +95,24 @@ mod matcher;
 #[derive(Clone)]
 pub struct Matcher {
     matcher: String,
-    outer_nested: u16
+    outer_nested: usize
 }
 
-// Pass through to the underlying implementation
-impl Generatable for JsonComponent {
+impl JsonComponent {
+    pub fn get_if_generatable(&self) -> Option<&dyn Generatable> {
+        match self {
+            JsonComponent::Value(value) => Some(value),
+            JsonComponent::Array(array) => Some(array),
+            JsonComponent::Object(_) => None,
+            JsonComponent::Record(record) => Some(record),
+            JsonComponent::Key(key) => Some(key),
+            JsonComponent::Matcher(matcher) => Some(matcher)
+        }
+    }
+}
+
+// Pass through methods
+impl JsonComponentValue for JsonComponent {
     fn get_children(&self) -> Vec<JsonComponent> {
         match self {
             JsonComponent::Value(value) => value.get_children(),
@@ -86,18 +120,18 @@ impl Generatable for JsonComponent {
             JsonComponent::Object(object) => object.get_children(),
             JsonComponent::Record(record) => record.get_children(),
             JsonComponent::Key(key) => key.get_children(),
-            JsonComponent::Matcher(matcher) => matcher.get_children(),
+            JsonComponent::Matcher(matcher) => matcher.get_children()
         }
     }
 
-    fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
+    fn num_children(&self) -> usize {
         match self {
-            JsonComponent::Value(value) => value.to_til_signal(component_name, parent_name),
-            JsonComponent::Array(array) => array.to_til_signal(component_name, parent_name),
-            JsonComponent::Object(object) => object.to_til_signal(component_name, parent_name),
-            JsonComponent::Record(record) => record.to_til_signal(component_name, parent_name),
-            JsonComponent::Key(key) => key.to_til_signal(component_name, parent_name),
-            JsonComponent::Matcher(matcher) => matcher.to_til_signal(component_name, parent_name),
+            JsonComponent::Value(value) => value.num_children(),
+            JsonComponent::Array(array) => array.num_children(),
+            JsonComponent::Object(object) => object.num_children(),
+            JsonComponent::Record(record) => record.num_children(),
+            JsonComponent::Key(key) => key.num_children(),
+            JsonComponent::Matcher(matcher) => matcher.num_children()
         }
     }
 
@@ -108,18 +142,7 @@ impl Generatable for JsonComponent {
             JsonComponent::Object(object) => object.to_graph_node(),
             JsonComponent::Record(record) => record.to_graph_node(),
             JsonComponent::Key(key) => key.to_graph_node(),
-            JsonComponent::Matcher(matcher) => matcher.to_graph_node(),
-        }
-    }
-
-    fn to_til_component(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
-        match self {
-            JsonComponent::Value(value) => value.to_til_component(gen_tools, gen_params),
-            JsonComponent::Array(array) => array.to_til_component(gen_tools, gen_params),
-            JsonComponent::Object(object) => object.to_til_component(gen_tools, gen_params),
-            JsonComponent::Record(record) => record.to_til_component(gen_tools, gen_params),
-            JsonComponent::Key(key) => key.to_til_component(gen_tools, gen_params),
-            JsonComponent::Matcher(matcher) => matcher.to_til_component(gen_tools, gen_params),
+            JsonComponent::Matcher(matcher) => matcher.to_graph_node()
         }
     }
 }

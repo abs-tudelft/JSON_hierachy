@@ -9,7 +9,7 @@ impl NameReg {
         }
     }
 
-    pub fn register(&mut self, name: &str, nesting_level: u16) -> String {
+    pub fn register(&mut self, name: &str, nesting_level: usize) -> String {
         let mut pref_name = String::from(name);
 
         // Add nesting level to prefered name

@@ -10,8 +10,8 @@ impl MatcherManager {
     }
 
     /// Add a matcher to the list of matchers
-    pub fn add_matcher(&mut self, matcher: &String, gen_params: &GeneratorParams) {
-        let exists = self.matchers.contains(matcher);
+    pub fn add_matcher(&mut self, matcher: &str, gen_params: &GeneratorParams) {
+        let exists = self.matchers.contains(&String::from(matcher));
 
         // Check if the matcher is already in the list
         if !exists {

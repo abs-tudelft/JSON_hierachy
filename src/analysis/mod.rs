@@ -5,6 +5,7 @@ mod visualization;
 pub mod generator;
 pub mod analyzer;
 pub mod gen_tools;
+pub mod types;
 // mod vhdl;
 mod til;
 
@@ -16,8 +17,8 @@ pub struct Generator {
 }
 
 pub struct GeneratorParams {
-    epc: u16,
-    bit_width: u16,
-    int_width: u16,
+    epc: usize,
+    bit_width: usize,
+    int_width: usize,
     output_dir: String,
 }

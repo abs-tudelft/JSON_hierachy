@@ -1,6 +1,4 @@
-use crate::analysis::{GeneratorParams, gen_tools::GenTools};
-
-use super::{Object, JsonComponent, Generatable, Record};
+use super::{Object, JsonComponent, Record, JsonComponentValue};
 
 impl Object {
     pub fn new(records: Vec<Record>) -> Object {
@@ -10,15 +8,7 @@ impl Object {
     }
 }
 
-impl Generatable for Object {
-    fn to_til_component(&self, _gen_tools: &mut GenTools, _gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
-        (None, None)
-    }
-
-    fn to_til_signal(&self, _component_name: &str, _parent_name: &str) -> Option<String> {
-        None
-    }
-
+impl JsonComponentValue for Object {
     fn to_graph_node(&self) -> Option<String> {
         None
     }
@@ -31,5 +21,9 @@ impl Generatable for Object {
         }
 
         children
+    }
+
+    fn num_children(&self) -> usize {
+        self.records.len()
     }
 }

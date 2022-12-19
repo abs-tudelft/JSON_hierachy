@@ -1,11 +1,9 @@
-use indoc::formatdoc;
+use crate::analysis::{GeneratorParams, types::{TilStreamType, Synchronicity, TilStreamingInterface}, gen_tools::TypeManager};
 
-use crate::analysis::{GenTools, GeneratorParams};
-
-use super::{Array, JsonComponent, Generatable};
+use super::{Array, JsonComponent, Generatable, JsonComponentValue};
 
 impl Array {
-    pub fn new(outer_nested: u16, inner_nested: u16, value: Option<Box<JsonComponent>>) -> Array {
+    pub fn new(outer_nested: usize, inner_nested: usize, value: Option<Box<JsonComponent>>) -> Array {
         Array {
             outer_nested,
             inner_nested,
@@ -15,63 +13,85 @@ impl Array {
 }
 
 impl Generatable for Array {
-    fn to_til_component(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
-        let comp_name = gen_tools.name_map.register("array_parser", self.outer_nested);        
+    fn get_streaming_interface(&self, component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface {       
+        let mut interface = TilStreamingInterface::new();
 
-        // Generate til for this component
-        let til = formatdoc!(
-            "
-            type {}InStream = Stream (
-                data: Bits({}),
-                throughput: {},
-                dimensionality: {},
-                synchronicity: Sync,
-                complexity: 8,
-            );
-
-            type {}OutStream = Stream (
-                data: Bits({}),
-                throughput: {},
-                dimensionality: {},
-                synchronicity: Sync,
-                complexity: 8,
-            );
-
-            streamlet {} = (
-                input: in {}InStream,
-                output: out {}OutStream,
-            );
-            ", 
-            comp_name, 
+        // Generate types for this component
+        // Input type
+        let input_type = TilStreamType::new(
+            &format!("{}InStream", component_name),
             gen_params.bit_width,
             gen_params.epc,
             self.outer_nested + 1,
+            Synchronicity::Sync,
+            8,
+        );
 
-            comp_name,
+        interface.add_input_stream("input", input_type.clone());
+        type_manager.register(input_type);
+
+        // Output type
+        let output_type = TilStreamType::new(
+            &format!("{}OutStream", component_name),
             gen_params.bit_width,
             gen_params.epc,
             self.outer_nested + 2,
-
-            comp_name,
-            comp_name,
-            comp_name,
+            Synchronicity::Sync,
+            8,
         );
 
-        (Some(comp_name), Some(til))
+        interface.add_output_stream("output", output_type.clone());
+        type_manager.register(output_type);
+
+        interface
     }
 
-    fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
-        Some(
-            formatdoc!(
-                "
-                {}.output -- {}.input;
-                ",
-                parent_name,
-                component_name,
-            )
-        )
+    fn get_preffered_name(&self) -> String {
+        "array_parser".to_string()
     }
 
+    fn get_nesting_level(&self) -> usize {
+        self.outer_nested
+    }
+
+    // fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
+    //     Some(
+    //         formatdoc!(
+    //             "
+    //             {}.output -- {}.input;
+    //             ",
+    //             parent_name,
+    //             component_name,
+    //         )
+    //     )
+    // }
+
+    // fn to_til_top_input_signal(&self, component_name: &str, top_input_name: &str) -> Option<String> {
+    //     Some(
+    //         formatdoc!(
+    //             "
+    //             {} -- {}.input;
+    //             ",
+    //             top_input_name,
+    //             component_name,
+    //         )
+    //     )
+    // }
+
+    // fn to_til_top_output_signal(&self, component_name: &str, top_output_name: &str) -> Option<String> {
+    //     Some(
+    //         formatdoc!(
+    //             "
+    //             {}.output -- {};
+    //             ",
+    //             component_name,
+    //             top_output_name,
+    //         )
+    //     )
+    // }
+}
+
+impl JsonComponentValue for Array {
     fn to_graph_node(&self) -> Option<String> {
         Some(
             format!("Array parser\nO: {}, I: {}", self.outer_nested, self.inner_nested)
@@ -82,6 +102,13 @@ impl Generatable for Array {
         match &self.value {
             Some(child) => vec![*child.clone()],
             None => vec![],
+        }
+    }
+
+    fn num_children(&self) -> usize {
+        match &self.value {
+            Some(_) => 1,
+            None => 0,
         }
     }
 }

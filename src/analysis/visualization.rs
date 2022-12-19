@@ -1,4 +1,4 @@
-use super::components::{JsonComponent, Generatable};
+use super::components::{JsonComponent, JsonComponentValue};
 
 /**********************************************************************************
  * Implementation of how to rendering the component tree to a dot file            *

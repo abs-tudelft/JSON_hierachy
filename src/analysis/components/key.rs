@@ -1,11 +1,9 @@
-use indoc::formatdoc;
+use crate::analysis::{GeneratorParams, gen_tools::TypeManager, types::{TilStreamType, Synchronicity, TilStreamingInterface}};
 
-use crate::analysis::{GeneratorParams, gen_tools::GenTools};
-
-use super::{Key, Generatable, JsonComponent, Matcher};
+use super::{Key, Generatable, JsonComponent, Matcher, JsonComponentValue};
 
 impl Key {
-    pub fn new(matcher: Matcher, outer_nested: u16, value: Option<Box<JsonComponent>>) -> Key {
+    pub fn new(matcher: Matcher, outer_nested: usize, value: Option<Box<JsonComponent>>) -> Key {
         Key {
             matcher,
             outer_nested,
@@ -15,100 +13,100 @@ impl Key {
 }
 
 impl Generatable for Key {
-    fn to_til_component(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
-        let comp_name = gen_tools.name_map.register("key_filter", self.outer_nested);
-
-        let mut til = String::new();
+    fn get_streaming_interface(&self, component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface {
+        let mut interface = TilStreamingInterface::new();
 
         // Type generation
+        // Input type
+        let input_type = TilStreamType::new(
+            &format!("{}InStream", component_name),
+            gen_params.bit_width,
+            gen_params.epc,
+            self.outer_nested + 1,
+            Synchronicity::Sync,
+            8,
+        );
+
+        type_manager.register(input_type.clone());
+        interface.add_input_stream("input", input_type);
+
+        // Matcher type
+        let matcher_type = TilStreamType::new(
+            "MatcherStream",
+            1,
+            gen_params.epc,
+            1,
+            Synchronicity::Sync,
+            8,
+        );
+
         // Register the matcher type
-        let type_exists = gen_tools.type_reg.register("MatcherStream");
-        if !type_exists {
-            til.push_str(
-                &formatdoc!(
-                    "
-                    type MatcherStream = Stream (
-                        data: Bits(1),
-                        throughput: {},
-                        dimensionality: 1,
-                        synchronicity: Sync,
-                        complexity: 8,
-                    );\n
-                ", gen_params.epc)
-            );
-        }
+        type_manager.register(matcher_type.clone());
+        interface.add_input_stream("matcherIn", matcher_type.clone());
+        interface.add_output_stream("matcherOut", matcher_type);
 
-        // Register the key type
-        // Keys cannot be registered yet due not being generic
-        // let type_exists = gen_tools.type_reg.register(&format!("KeyStream");
-        // if !type_exists {
-        //     Here comes the key stream type
-        // }
-        //
-        // Fall back for now:
-        til.push_str(
-            &formatdoc!(
-                "
-                type {}InStream = Stream (
-                    data: Bits({}),
-                    throughput: {},
-                    dimensionality: {},
-                    synchronicity: Sync,
-                    complexity: 8,
-                );
-
-                type {}OutStream = Stream (
-                    data: Bits({}),
-                    throughput: {},
-                    dimensionality: {},
-                    synchronicity: Sync,
-                    complexity: 8,
-                );
-                ", 
-                comp_name, 
-                gen_params.bit_width,
-                gen_params.epc,
-                self.outer_nested + 1,
-    
-                comp_name,
-                gen_params.bit_width,
-                gen_params.epc,
-                self.outer_nested + 1
-            )
+        // Output type
+        let output_type = TilStreamType::new(
+            &format!("{}OutStream", component_name),
+            gen_params.bit_width,
+            gen_params.epc,
+            self.outer_nested + 1,
+            Synchronicity::Sync,
+            8,
         );
 
-        // Component definition
-        til.push_str(
-            &formatdoc!(
-                "
-                streamlet {} = (
-                    input: in {}InStream,
-                    matcherIn: in MatcherStream,
-                    matcherOut: out MatcherStream,
-                    output: out {}OutStream,
-                );
-                ",
-                comp_name,
-                comp_name,
-                comp_name,
-            )
-        );
+        type_manager.register(output_type.clone());
+        interface.add_output_stream("output", output_type);        
 
-        (Some(comp_name), Some(til))
+        interface
     }
 
-    fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
-        Some(
-            formatdoc!(
-                "
-                {}.output -- {}.input;
-                ",
-                parent_name,
-                component_name,
-            )
-        )
+    fn get_preffered_name(&self) -> String {
+        "key_parser".to_string()
     }
 
+    fn get_nesting_level(&self) -> usize {
+        self.outer_nested
+    }
+
+    // fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
+    //     Some(
+    //         formatdoc!(
+    //             "
+    //             {}.output -- {}.input;
+    //             ",
+    //             parent_name,
+    //             component_name,
+    //         )
+    //     )
+    // }
+
+    // fn to_til_top_input_signal(&self, component_name: &str, top_input_name: &str) -> Option<String> {
+    //     Some(
+    //         formatdoc!(
+    //             "
+    //             {} -- {}.input;
+    //             ",
+    //             top_input_name,
+    //             component_name,
+    //         )
+    //     )
+    // }
+
+    // fn to_til_top_output_signal(&self, component_name: &str, top_output_name: &str) -> Option<String> {
+    //     Some(
+    //         formatdoc!(
+    //             "
+    //             {}.output -- {};
+    //             ",
+    //             component_name,
+    //             top_output_name,
+    //         )
+    //     )
+    // }
+}
+
+impl JsonComponentValue for Key {
     fn to_graph_node(&self) -> Option<String> {
         Some(
             format!("Key filter\nO: {}", self.outer_nested)
@@ -119,6 +117,13 @@ impl Generatable for Key {
         match &self.value {
             Some(child) => vec![JsonComponent::Matcher(self.matcher.clone()), *child.clone()],
             None => vec![JsonComponent::Matcher(self.matcher.clone())],
+        }
+    }
+
+    fn num_children(&self) -> usize {
+        match &self.value {
+            Some(_) => 2,
+            None => 1,
         }
     }
 }

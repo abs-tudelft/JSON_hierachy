@@ -1,11 +1,9 @@
-use indoc::formatdoc;
+use crate::analysis::{GeneratorParams, gen_tools::TypeManager, types::{TilStreamType, Synchronicity, TilStreamingInterface}};
 
-use crate::analysis::{GeneratorParams, gen_tools::GenTools};
-
-use super::{JsonComponent, JsonType, Value, Generatable};
+use super::{JsonComponent, JsonType, Value, Generatable, JsonComponentValue};
 
 impl Value {
-    pub fn new(data_type: JsonType, outer_nested: u16) -> Value {
+    pub fn new(data_type: JsonType, outer_nested: usize) -> Value {
         Value {
             data_type,
             outer_nested,
@@ -14,147 +12,157 @@ impl Value {
 }
 
 impl Generatable for Value {
-    fn to_til_component(&self, gen_tools: &mut GenTools, gen_params: &GeneratorParams) -> (Option<String>, Option<String>) {
-        let comp_name: String;
-
-        let til = match self.data_type {
+    fn get_streaming_interface(&self, component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface {
+        match self.data_type {
             JsonType::String => {
-                comp_name = gen_tools.name_map.register("string_parser", self.outer_nested);
+                let mut interface = TilStreamingInterface::new();
 
-                formatdoc!(
-                    "
-                    type {}InStream = Stream (
-                        data: Bits({}),
-                        throughput: {},
-                        dimensionality: {},
-                        synchronicity: Sync,
-                        complexity: 8,
-                    );
-
-                    type {}OutStream = Stream (
-                        data: Bits({}),
-                        throughput: {},
-                        dimensionality: {},
-                        synchronicity: Sync,
-                        complexity: 8,
-                    );
-
-                    streamlet {} = (
-                        input: in {}InStream,
-                        output: out {}OutStream,
-                    );
-                    ", 
-                    comp_name, 
+                // Type generation
+                // Input type
+                let input_type = TilStreamType::new(
+                    &format!("{}InStream", component_name),
                     gen_params.bit_width,
                     gen_params.epc,
                     self.outer_nested + 1,
+                    Synchronicity::Sync,
+                    8,
+                );
 
-                    comp_name,
+                type_manager.register(input_type.clone());
+                interface.add_input_stream("input", input_type);
+
+                // Output type
+                let output_type = TilStreamType::new(
+                    &format!("{}OutStream", component_name),
                     gen_params.bit_width,
                     gen_params.epc,
                     self.outer_nested + 1,
+                    Synchronicity::Sync,
+                    8,
+                );
 
-                    comp_name,
-                    comp_name,
-                    comp_name,
-                )
+                type_manager.register(output_type.clone());
+                interface.add_output_stream("output", output_type);
+
+                interface
             },
             JsonType::Integer => {
-                comp_name = gen_tools.name_map.register("int_parser", self.outer_nested);
+                let mut interface = TilStreamingInterface::new();
 
-                formatdoc!(
-                    "
-                    type {}InStream = Stream (
-                        data: Bits({}),
-                        throughput: {},
-                        dimensionality: {},
-                        synchronicity: Sync,
-                        complexity: 8,
-                    );
-
-                    type {}OutStream = Stream (
-                        data: Bits({}),
-                        throughput: 1,
-                        dimensionality: {},
-                        synchronicity: Sync,
-                        complexity: 2,
-                    );
-
-                    streamlet {} = (
-                        input: in {}InStream,
-                        output: out {}OutStream,
-                    );
-                    ", 
-                    comp_name, 
+                // Type generation
+                // Input type
+                let input_type = TilStreamType::new(
+                    &format!("{}InStream", component_name),
                     gen_params.bit_width,
                     gen_params.epc,
                     self.outer_nested + 1,
+                    Synchronicity::Sync,
+                    8,
+                );
 
-                    comp_name,
+                type_manager.register(input_type.clone());
+                interface.add_input_stream("input", input_type);
+
+                // Output type
+                let output_type = TilStreamType::new(
+                    &format!("{}OutStream", component_name),
                     gen_params.int_width,
+                    1,
                     self.outer_nested,
+                    Synchronicity::Sync,
+                    2,
+                );
 
-                    comp_name,
-                    comp_name,
-                    comp_name,
-                )
+                type_manager.register(output_type.clone());
+                interface.add_output_stream("output", output_type);
+
+                interface
             },
             JsonType::Boolean => {
-                comp_name = gen_tools.name_map.register("bool_parser", self.outer_nested);
+                let mut interface = TilStreamingInterface::new();
 
-                formatdoc!(
-                    "
-                    type {}InStream = Stream (
-                        data: Bits({}),
-                        throughput: {},
-                        dimensionality: {},
-                        synchronicity: Sync,
-                        complexity: 8,
-                    );
-
-                    type {}OutStream = Stream (
-                        data: Bits(1),
-                        throughput: 1,
-                        dimensionality: {},
-                        synchronicity: Sync,
-                        complexity: 2,
-                    );
-
-                    streamlet {} = (
-                        input: in {}InStream,
-                        output: out {}OutStream,
-                    );
-                    ", 
-                    comp_name, 
+                // Type generation
+                // Input type
+                let input_type = TilStreamType::new(
+                    &format!("{}InStream", component_name),
                     gen_params.bit_width,
                     gen_params.epc,
                     self.outer_nested + 1,
+                    Synchronicity::Sync,
+                    8,
+                );
 
-                    comp_name,
+                type_manager.register(input_type.clone());
+                interface.add_input_stream("input", input_type);
+
+                // Output type
+                let output_type = TilStreamType::new(
+                    &format!("{}OutStream", component_name),
+                    1,
+                    1,
                     self.outer_nested,
+                    Synchronicity::Sync,
+                    2,
+                );
 
-                    comp_name,
-                    comp_name,
-                    comp_name,
-                )
+                type_manager.register(output_type.clone());
+                interface.add_output_stream("output", output_type);
+
+                interface
             }
-        };
-
-        (Some(comp_name), Some(til))
+        }
     }
 
-    fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
-        Some(
-            formatdoc!(
-                "
-                {}.output -- {}.input;
-                ",
-                parent_name,
-                component_name,
-            )
-        )
+    fn get_preffered_name(&self) -> String {
+        match self.data_type {
+            JsonType::String => "string_parser".to_string(),
+            JsonType::Integer => "int_parser".to_string(),
+            JsonType::Boolean => "bool_parser".to_string(),
+        }
     }
 
+    fn get_nesting_level(&self) -> usize {
+        self.outer_nested
+    }
+
+    // fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
+    //     Some(
+    //         formatdoc!(
+    //             "
+    //             {}.output -- {}.input;
+    //             ",
+    //             parent_name,
+    //             component_name,
+    //         )
+    //     )
+    // }
+
+    // fn to_til_top_input_signal(&self, component_name: &str, top_input_name: &str) -> Option<String> {
+    //     Some(
+    //         formatdoc!(
+    //             "
+    //             {} -- {}.input;
+    //             ",
+    //             top_input_name,
+    //             component_name,
+    //         )
+    //     )
+    // }
+
+    // fn to_til_top_output_signal(&self, component_name: &str, top_output_name: &str) -> Option<String> {
+    //     Some(
+    //         formatdoc!(
+    //             "
+    //             {}.output -- {};
+    //             ",
+    //             component_name,
+    //             top_output_name,
+    //         )
+    //     )
+    // }
+}
+
+impl JsonComponentValue for Value {
     fn to_graph_node(&self) -> Option<String> {
         Some(
             format!("{:?} parser\nO: {}", self.data_type, self.outer_nested)
@@ -163,5 +171,9 @@ impl Generatable for Value {
 
     fn get_children(&self) -> Vec<JsonComponent> {
         Vec::new()
+    }
+
+    fn num_children(&self) -> usize {
+        0
     }
 }
