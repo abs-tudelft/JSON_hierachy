@@ -101,7 +101,7 @@ impl Generatable for Key {
         Some(
             formatdoc!(
                 "
-                {}.output -- {}.input ;
+                {}.output -- {}.input;
                 ",
                 parent_name,
                 component_name,

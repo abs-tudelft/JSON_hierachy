@@ -64,7 +64,7 @@ impl Generatable for Array {
         Some(
             formatdoc!(
                 "
-                {}.output -- {}.input ;
+                {}.output -- {}.input;
                 ",
                 parent_name,
                 component_name,
