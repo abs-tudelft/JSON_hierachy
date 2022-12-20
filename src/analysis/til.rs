@@ -1,4 +1,4 @@
-use super::{Generator, components::{JsonComponent, JsonComponentValue}, til, types::{TilComponent, TilInlineImplementation, TilImplementationType, TilStreamType, Synchronicity, TilStreamParam}};
+use super::{Generator, components::{JsonComponent, JsonComponentValue}, til, types::{TilComponent, TilInlineImplementation, TilImplementationType, TilStreamType, Synchronicity, TilStreamParam, TilSignal}};
 
 /**********************************************************************************
  * Set of functions to generate VHDL code around the components                   *
@@ -62,7 +62,7 @@ impl Generator {
         );
 
         // Create input stream for the top component
-        top_component.streams.add_input_stream("input", top_input_type.clone());
+        top_component.get_streams_mut().add_input_stream("input", top_input_type.clone());
         self.gen_tools.type_manager.register(top_input_type);
 
         // Check if there is a root component
@@ -71,16 +71,19 @@ impl Generator {
             let mut implementation = TilInlineImplementation::new();            
 
             // In-place traversal of the component tree
-            let mut stack: Vec<JsonComponent> = Vec::new();
+            let mut stack: Vec<TreeComponent> = Vec::new();
 
             // Add the root component to the stack
-            stack.push(root.to_owned());
+            stack.push(TreeComponent { parent_name: None, component: root.to_owned() });
 
             // If the parent name is None, it means that the parent is the input stream
-            let parent_name: Option<String> = None; 
+            let mut parent_name: Option<String> = None; 
 
             while !stack.is_empty() {
-                let current_component = stack.pop().unwrap();
+                let current_tree_comp = stack.pop().unwrap();
+                let current_component = current_tree_comp.component;
+                let parent_name = current_tree_comp.parent_name;
+                let mut comp_name = parent_name.clone();
 
                 // Generate TIL for the current component
                 if let Some(ref component) = current_component.get_if_generatable() {
@@ -91,7 +94,15 @@ impl Generator {
                     let inst_name = implementation.add_instance(til_comp.get_name().to_string());
 
                     implementation.add_multiple_signals(
-                        component.get_signals(&Some(inst_name.clone()), &parent_name)
+                        match parent_name {
+                            Some(_) => {
+                                component.get_signals(&Some(inst_name.clone()), "input", &parent_name, "output")
+                            },
+                            None => {
+                                component.get_signals(&Some(inst_name.clone()), "input", &None, "input")
+                            }
+                        }
+                        
                     );
 
                     // If the current component is a matcher
@@ -102,16 +113,27 @@ impl Generator {
 
                     if component.num_outgoing_signals() == 0 {
                         // If the current component is a leaf, add the output stream to the top component
-                        for stream in til_comp.streams.get_output_streams() {
+                        for stream in til_comp.get_streams().get_output_streams() {
                             let output_name = format!("output_{}", inst_name);
-                            top_component.streams.add_output_stream(&output_name, stream.get_type().clone());
+                            top_component.get_streams_mut().add_output_stream(&output_name, stream.get_type().clone());
+                            implementation.add_signal(
+                                TilSignal::new(
+                                    &Some(inst_name.clone()), 
+                                    "output", 
+                                    &None, 
+                                    &output_name
+                                )
+                            );
                         }
                     }
+
+                    // Set the parent name to the current instance name
+                    comp_name = Some(inst_name);
                 }                
 
                 // Add the children of the current component to the stack
                 for child in current_component.get_children() {
-                    stack.push(child);
+                    stack.push(TreeComponent { parent_name: comp_name.clone(), component: child });
                 }
             }
 
@@ -123,4 +145,9 @@ impl Generator {
 
         top_component
     }
+}
+
+struct TreeComponent {
+    pub parent_name: Option<String>,
+    pub component: JsonComponent
 }

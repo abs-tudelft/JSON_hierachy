@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use indoc::formatdoc;
 
-use crate::analysis::{types::TilComponent, components::Generatable, GeneratorParams};
+use crate::analysis::{types::{TilComponent, TilImplementationType}, components::Generatable, GeneratorParams};
 
 use super::{EntityManager, NameReg, TypeManager};
 
@@ -46,13 +46,13 @@ impl EntityManager {
         for (name, entity) in &self.entity_list {
             let mut local_stream_defs = String::new();
 
-            for stream in entity.streams.get_input_streams() {
+            for stream in entity.get_streams().get_input_streams() {
                 local_stream_defs.push_str(
                     &format!("{}: in {},\n", stream.get_name(), stream.get_type().get_name())
                 );
             }
 
-            for stream in entity.streams.get_output_streams() {
+            for stream in entity.get_streams().get_output_streams() {
                 local_stream_defs.push_str(
                     &format!("{}: out {},\n", stream.get_name(), stream.get_type().get_name())
                 );
@@ -63,16 +63,53 @@ impl EntityManager {
                     "
                     streamlet {} = (
                         {}
-                    );
-                    ",
+                    )",
                     name,
                     local_stream_defs
                 )
             );
 
-            stream_defs.push('\n');
+            // Check if there is an implementation
+            if let Some(implementation) = entity.get_implementation() {
+                stream_defs.push_str(
+                    &formatdoc!(
+                        "
+                        {{
+                            impl: {{
+                                {}
+                            }}
+                        }}",
+                        self.generate_implementation(implementation)
+                    )
+                );
+            }
+
+            stream_defs.push_str(";\n\n")
         }
 
         stream_defs
+    }
+
+    fn generate_implementation(&self, implementation: &TilImplementationType) -> String {
+        let mut til = String::new();
+
+        match implementation {
+            TilImplementationType::Inline(inline) => {
+                for instance in inline.get_instances() {
+                    til.push_str(&instance.to_til());
+                    til.push('\n');
+                }
+
+                til.push('\n');
+
+                for signal in inline.get_signals() {
+                    til.push_str(&signal.to_til());
+                    til.push('\n');
+                }
+            },
+            _ => {}
+        }
+
+        til
     }
 }

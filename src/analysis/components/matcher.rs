@@ -41,7 +41,7 @@ impl Generatable for Matcher {
         self.outer_nested
     }
 
-    fn get_signals(&self, instance_name: &Option<String>, parent_name: &Option<String>) -> Vec<TilSignal> {
+    fn get_signals(&self, instance_name: &Option<String>, instance_stream_name: &str, parent_name: &Option<String>, parent_stream_name: &str) -> Vec<TilSignal> {
         vec![
             TilSignal::new(parent_name, "matcherOut", instance_name, "input"),
             TilSignal::new(instance_name, "output", parent_name, "matcherIn"),

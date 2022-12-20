@@ -19,7 +19,7 @@ impl Generatable for Array {
         // Generate types for this component
         // Input type
         let input_type = TilStreamType::new(
-            &format!("{}OutStream", component_name),
+            &format!("{}InStream", component_name),
             self.get_input_type_params(gen_params)
         );
 
@@ -46,8 +46,8 @@ impl Generatable for Array {
         self.outer_nested
     }
 
-    fn get_signals(&self, instance_name: &Option<String>, parent_name: &Option<String>) -> Vec<TilSignal> {
-        vec![TilSignal::new(parent_name, "output", instance_name, "input")]     
+    fn get_signals(&self, instance_name: &Option<String>, instance_stream_name: &str, parent_name: &Option<String>, parent_stream_name: &str) -> Vec<TilSignal> {
+        vec![TilSignal::new(parent_name, parent_stream_name, instance_name, instance_stream_name)]     
     }
 
     fn num_outgoing_signals(&self) -> usize {

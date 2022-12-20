@@ -1,8 +1,8 @@
 #[derive(Clone)]
 pub struct TilComponent {
     name: String,
-    pub streams: TilStreamingInterface,
-    pub implementation: Option<TilImplementationType>,
+    streams: TilStreamingInterface,
+    implementation: Option<TilImplementationType>,
 }
 
 impl TilComponent {
@@ -25,6 +25,18 @@ impl TilComponent {
     pub fn set_streaming_interface(&mut self, stream_interface: TilStreamingInterface) {
         self.streams = stream_interface;
     }
+
+    pub fn get_streams(&self) -> &TilStreamingInterface {
+        &self.streams
+    }
+
+    pub fn get_streams_mut(&mut self) -> &mut TilStreamingInterface {
+        &mut self.streams
+    }
+
+    pub fn get_implementation(&self) -> &Option<TilImplementationType> {
+        &self.implementation
+    }
 }
 
 #[derive(Clone)]
@@ -35,7 +47,7 @@ pub enum TilImplementationType {
 
 #[derive(Clone)]
 pub struct TilInlineImplementation {
-    instances: Vec<String>,
+    instances: Vec<TilInstance>,
     signals: Vec<TilSignal>,
 }
 
@@ -49,7 +61,7 @@ impl TilInlineImplementation {
 
     pub fn add_instance(&mut self, component_name: String) -> String{
         let instance_name = format!("{}_inst", component_name);
-        self.instances.push(instance_name.to_string());
+        self.instances.push(TilInstance::new(&component_name, &instance_name.clone()));
         instance_name
     }
 
@@ -59,6 +71,33 @@ impl TilInlineImplementation {
 
     pub fn add_multiple_signals(&mut self, signals: Vec<TilSignal>) {
         self.signals.extend(signals);
+    }
+
+    pub fn get_instances(&self) -> &Vec<TilInstance> {
+        &self.instances
+    }
+
+    pub fn get_signals(&self) -> &Vec<TilSignal> {
+        &self.signals
+    }
+}
+
+#[derive(Clone)]
+pub struct TilInstance {
+    component_name: String,
+    instance_name: String,
+}
+
+impl TilInstance {
+    pub fn new(component_name: &str, instance_name: &str) -> TilInstance {
+        TilInstance {
+            component_name: String::from(component_name),
+            instance_name: String::from(instance_name),
+        }
+    }
+
+    pub fn to_til(&self) -> String {
+        format!("{} = {};", self.instance_name, self.component_name)
     }
 }
 
@@ -78,6 +117,31 @@ impl TilSignal {
             dest_inst_name: dest_inst_name.to_owned(),
             dest_stream_name: String::from(dest_stream_name),
         }
+    }
+
+    pub fn to_til(&self) -> String {
+        let mut signal = String::new();
+
+        // If the signal is from an instance, add the instance name
+        if let Some(source_inst_name) = &self.source_inst_name {
+            signal.push_str(&format!("{}.", source_inst_name));
+        }
+
+        // Add stream name
+        signal.push_str(&self.source_stream_name);
+
+        // Connector
+        signal.push_str(" -- ");
+
+        // If the signal is to an instance, add the instance name
+        if let Some(dest_inst_name) = &self.dest_inst_name {
+            signal.push_str(&format!("{}.", dest_inst_name));
+        }
+        
+        // Add stream name
+        signal.push_str(&format!("{};", self.dest_stream_name));
+    
+        signal
     }
 }
 
