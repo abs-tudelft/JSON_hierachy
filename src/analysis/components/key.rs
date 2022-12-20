@@ -1,4 +1,4 @@
-use crate::analysis::{GeneratorParams, gen_tools::TypeManager, types::{TilStreamType, Synchronicity, TilStreamingInterface}};
+use crate::analysis::{GeneratorParams, gen_tools::TypeManager, types::{TilStreamType, Synchronicity, TilStreamingInterface, TilSignal, TilStreamParam}};
 
 use super::{Key, Generatable, JsonComponent, Matcher, JsonComponentValue};
 
@@ -20,11 +20,7 @@ impl Generatable for Key {
         // Input type
         let input_type = TilStreamType::new(
             &format!("{}InStream", component_name),
-            gen_params.bit_width,
-            gen_params.epc,
-            self.outer_nested + 1,
-            Synchronicity::Sync,
-            8,
+            self.get_input_type_params(gen_params)
         );
 
         type_manager.register(input_type.clone());
@@ -33,11 +29,7 @@ impl Generatable for Key {
         // Matcher type
         let matcher_type = TilStreamType::new(
             "MatcherStream",
-            1,
-            gen_params.epc,
-            1,
-            Synchronicity::Sync,
-            8,
+            self.matcher.get_input_type_params(gen_params)
         );
 
         // Register the matcher type
@@ -48,11 +40,7 @@ impl Generatable for Key {
         // Output type
         let output_type = TilStreamType::new(
             &format!("{}OutStream", component_name),
-            gen_params.bit_width,
-            gen_params.epc,
-            self.outer_nested + 1,
-            Synchronicity::Sync,
-            8,
+            self.get_output_type_params(gen_params)
         );
 
         type_manager.register(output_type.clone());
@@ -69,41 +57,33 @@ impl Generatable for Key {
         self.outer_nested
     }
 
-    // fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
-    //     Some(
-    //         formatdoc!(
-    //             "
-    //             {}.output -- {}.input;
-    //             ",
-    //             parent_name,
-    //             component_name,
-    //         )
-    //     )
-    // }
+    fn get_signals(&self, instance_name: &Option<String>, parent_name: &Option<String>) -> Vec<TilSignal> {
+        vec![TilSignal::new(parent_name, "output", instance_name, "input")]     
+    }
 
-    // fn to_til_top_input_signal(&self, component_name: &str, top_input_name: &str) -> Option<String> {
-    //     Some(
-    //         formatdoc!(
-    //             "
-    //             {} -- {}.input;
-    //             ",
-    //             top_input_name,
-    //             component_name,
-    //         )
-    //     )
-    // }
+    fn num_outgoing_signals(&self) -> usize {
+        2
+    }
 
-    // fn to_til_top_output_signal(&self, component_name: &str, top_output_name: &str) -> Option<String> {
-    //     Some(
-    //         formatdoc!(
-    //             "
-    //             {}.output -- {};
-    //             ",
-    //             component_name,
-    //             top_output_name,
-    //         )
-    //     )
-    // }
+    fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+        TilStreamParam::new(
+            gen_params.bit_width,
+            gen_params.epc,
+            self.outer_nested + 1,
+            Synchronicity::Sync,
+            8,
+        )
+    }
+
+    fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+        TilStreamParam::new(
+            gen_params.bit_width,
+            gen_params.epc,
+            self.outer_nested + 1,
+            Synchronicity::Sync,
+            8,
+        )
+    }
 }
 
 impl JsonComponentValue for Key {

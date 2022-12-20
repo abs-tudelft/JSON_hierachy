@@ -14,6 +14,10 @@ impl TilComponent {
         }
     }
 
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+
     pub fn set_implementation(&mut self, implementation: TilImplementationType) {
         self.implementation = Some(implementation);
     }
@@ -31,7 +35,7 @@ pub enum TilImplementationType {
 
 #[derive(Clone)]
 pub struct TilInlineImplementation {
-    instances: Vec<TilComponent>,
+    instances: Vec<String>,
     signals: Vec<TilSignal>,
 }
 
@@ -43,19 +47,38 @@ impl TilInlineImplementation {
         }
     }
 
-    pub fn add_instance(&mut self, instance: TilComponent) {
-        self.instances.push(instance);
+    pub fn add_instance(&mut self, component_name: String) -> String{
+        let instance_name = format!("{}_inst", component_name);
+        self.instances.push(instance_name.to_string());
+        instance_name
     }
 
     pub fn add_signal(&mut self, signal: TilSignal) {
         self.signals.push(signal);
     }
+
+    pub fn add_multiple_signals(&mut self, signals: Vec<TilSignal>) {
+        self.signals.extend(signals);
+    }
 }
 
 #[derive(Clone)]
 pub struct TilSignal {
-    sender_name: String,
-    receiver_name: String,
+    source_inst_name: Option<String>,
+    source_stream_name: String,
+    dest_inst_name: Option<String>,
+    dest_stream_name: String,
+}
+
+impl TilSignal {
+    pub fn new(source_inst_name: &Option<String>, source_stream_name: &str, dest_inst_name: &Option<String>, dest_stream_name: &str) -> TilSignal {
+        TilSignal {
+            source_inst_name: source_inst_name.to_owned(),
+            source_stream_name: String::from(source_stream_name),
+            dest_inst_name: dest_inst_name.to_owned(),
+            dest_stream_name: String::from(dest_stream_name),
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -106,6 +129,13 @@ pub struct TilStream {
 }
 
 impl TilStream {
+    pub fn new(stream_name: &str, stream_type: TilStreamType) -> TilStream {
+        TilStream {
+            name: String::from(stream_name),
+            stream_type
+        }
+    }
+
     pub fn get_name(&self) -> &str {
         &self.name
     }
@@ -117,7 +147,29 @@ impl TilStream {
 
 #[derive(Clone)]
 pub struct TilStreamType {
-    pub name: String,
+    name: String,
+    params: TilStreamParam
+}
+
+impl TilStreamType {
+    pub fn new(type_name: &str, stream_params: TilStreamParam) -> TilStreamType {
+        TilStreamType {
+            name: String::from(type_name),
+            params: stream_params
+        }
+    }
+
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn get_params(&self) -> &TilStreamParam {
+        &self.params
+    }
+}
+
+#[derive(Clone)]
+pub struct TilStreamParam {
     pub data_bits: usize,
     pub throughput: usize,
     pub dimensionality: usize,
@@ -125,10 +177,9 @@ pub struct TilStreamType {
     pub complexity: u8,
 }
 
-impl TilStreamType {
-    pub fn new(type_name: &str, data_bits: usize, throughput: usize, dimensionality: usize, synchronicity: Synchronicity, complexity: u8) -> TilStreamType {
-        TilStreamType {
-            name: String::from(type_name),
+impl TilStreamParam {
+    pub fn new(data_bits: usize, throughput: usize, dimensionality: usize, synchronicity: Synchronicity, complexity: u8) -> TilStreamParam {
+        TilStreamParam {
             data_bits,
             throughput,
             dimensionality,
@@ -137,9 +188,7 @@ impl TilStreamType {
         }
     }
 
-    pub fn get_name(&self) -> &str {
-        &self.name
-    }
+    
 }
 
 #[derive(Debug, Clone)]

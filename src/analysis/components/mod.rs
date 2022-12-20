@@ -7,7 +7,7 @@ pub enum JsonType {
 
 use crate::analysis::{GeneratorParams};
 
-use super::{types::{TilStreamingInterface}, gen_tools::TypeManager};
+use super::{types::{TilStreamingInterface, TilSignal, TilStreamParam}, gen_tools::TypeManager};
 
 pub trait Generatable {
     
@@ -16,25 +16,13 @@ pub trait Generatable {
     /// 
     /// Returns a tuple of (component_name, til_streamlet_definition)
     
-
+    fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam;
+    fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam;
     fn get_streaming_interface(&self, component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface;
+    fn get_signals(&self, instance_name: &Option<String>, parent_name: &Option<String>) -> Vec<TilSignal>;
+    fn num_outgoing_signals(&self) -> usize;
     fn get_preffered_name(&self) -> String;
     fn get_nesting_level(&self) -> usize;
-
-    // /// Generates the signal connenction for the component
-    // /// 
-    // /// Returns an optional string with the signal connections
-    // fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String>;
-
-    // /// Generates the input signal connection to the top component
-    // /// 
-    // /// Returns an optional string with the signal connections
-    // fn to_til_top_input_signal(&self, component_name: &str, top_input_name: &str) -> Option<String>;
-
-    // /// Generates the output signal connection to the top component
-    // /// 
-    // /// Returns an optional string with the signal connections
-    // fn to_til_top_output_signal(&self, component_name: &str, top_output_name: &str) -> Option<String>;
 }
 
 pub trait JsonComponentValue {

@@ -1,4 +1,4 @@
-use crate::analysis::{GeneratorParams, types::{TilStreamType, Synchronicity, TilStreamingInterface}, gen_tools::TypeManager};
+use crate::analysis::{GeneratorParams, types::{TilStreamType, Synchronicity, TilStreamingInterface, TilSignal, TilStreamParam}, gen_tools::TypeManager};
 
 use super::{JsonComponent, Matcher, Generatable, JsonComponentValue};
 
@@ -16,17 +16,13 @@ impl Matcher {
 }
 
 impl Generatable for Matcher {
-    fn get_streaming_interface(&self, component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface {
+    fn get_streaming_interface(&self, _component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface {
         let mut interface = TilStreamingInterface::new();
 
         // Type generation
         let matcher_type = TilStreamType::new(
             "MatcherStream",
-            1,
-            gen_params.epc,
-            1,
-            Synchronicity::Sync,
-            8,
+            self.get_input_type_params(gen_params)
         );
 
         // Register the matcher type
@@ -45,28 +41,30 @@ impl Generatable for Matcher {
         self.outer_nested
     }
 
-    // fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
-    //     Some(
-    //         formatdoc!(
-    //             "
-    //             {}.matcherOut -- {}.input;
-    //             {}.output -- {}.matcherIn;
-    //             ", 
-    //             parent_name, 
-    //             component_name,
-    //             component_name,
-    //             parent_name                
-    //         )
-    //     )
-    // }
+    fn get_signals(&self, instance_name: &Option<String>, parent_name: &Option<String>) -> Vec<TilSignal> {
+        vec![
+            TilSignal::new(parent_name, "matcherOut", instance_name, "input"),
+            TilSignal::new(instance_name, "output", parent_name, "matcherIn"),
+        ]     
+    }
 
-    // fn to_til_top_input_signal(&self, _component_name: &str, _top_input_name: &str) -> Option<String> {
-    //     None
-    // }
+    fn num_outgoing_signals(&self) -> usize {
+        1
+    }
 
-    // fn to_til_top_output_signal(&self, _component_name: &str, _top_output_name: &str) -> Option<String> {
-    //     None
-    // }
+    fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+        TilStreamParam::new(
+            1,
+            gen_params.epc,
+            1,
+            Synchronicity::Sync,
+            8
+        )
+    }
+
+    fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+        self.get_input_type_params(gen_params)
+    }
 }
 
 impl JsonComponentValue for Matcher {

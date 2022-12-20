@@ -24,10 +24,6 @@ impl TypeManager {
         }
     }
 
-    pub fn get_type(&self, data_type: &str) -> Option<&TilStreamType> {
-        self.type_list.get(&String::from(data_type))
-    }
-
     pub fn does_type_exist(&self, data_type: &str) -> bool {
         self.type_list.contains_key(&String::from(data_type))
     }
@@ -36,6 +32,8 @@ impl TypeManager {
         let mut type_defs = String::new();
 
         for (type_name, stream_type) in &self.type_list {
+            let type_params = stream_type.get_params();
+
             type_defs.push_str(
                 &formatdoc!(
                     "
@@ -48,11 +46,11 @@ impl TypeManager {
                     );
                     ",
                     type_name,
-                    stream_type.data_bits,
-                    stream_type.throughput,
-                    stream_type.dimensionality,
-                    stream_type.synchronicity,
-                    stream_type.complexity,
+                    type_params.data_bits,
+                    type_params.throughput,
+                    type_params.dimensionality,
+                    type_params.synchronicity,
+                    type_params.complexity,
                 )
             );
 

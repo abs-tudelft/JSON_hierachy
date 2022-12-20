@@ -1,4 +1,4 @@
-use crate::analysis::{GeneratorParams, types::{TilStreamType, Synchronicity, TilStreamingInterface}, gen_tools::TypeManager};
+use crate::analysis::{GeneratorParams, types::{TilStreamType, Synchronicity, TilStreamingInterface, TilSignal, TilStreamParam}, gen_tools::TypeManager};
 
 use super::{Array, JsonComponent, Generatable, JsonComponentValue};
 
@@ -19,12 +19,8 @@ impl Generatable for Array {
         // Generate types for this component
         // Input type
         let input_type = TilStreamType::new(
-            &format!("{}InStream", component_name),
-            gen_params.bit_width,
-            gen_params.epc,
-            self.outer_nested + 1,
-            Synchronicity::Sync,
-            8,
+            &format!("{}OutStream", component_name),
+            self.get_input_type_params(gen_params)
         );
 
         interface.add_input_stream("input", input_type.clone());
@@ -33,11 +29,7 @@ impl Generatable for Array {
         // Output type
         let output_type = TilStreamType::new(
             &format!("{}OutStream", component_name),
-            gen_params.bit_width,
-            gen_params.epc,
-            self.outer_nested + 2,
-            Synchronicity::Sync,
-            8,
+            self.get_output_type_params(gen_params)
         );
 
         interface.add_output_stream("output", output_type.clone());
@@ -54,41 +46,33 @@ impl Generatable for Array {
         self.outer_nested
     }
 
-    // fn to_til_signal(&self, component_name: &str, parent_name: &str) -> Option<String> {
-    //     Some(
-    //         formatdoc!(
-    //             "
-    //             {}.output -- {}.input;
-    //             ",
-    //             parent_name,
-    //             component_name,
-    //         )
-    //     )
-    // }
+    fn get_signals(&self, instance_name: &Option<String>, parent_name: &Option<String>) -> Vec<TilSignal> {
+        vec![TilSignal::new(parent_name, "output", instance_name, "input")]     
+    }
 
-    // fn to_til_top_input_signal(&self, component_name: &str, top_input_name: &str) -> Option<String> {
-    //     Some(
-    //         formatdoc!(
-    //             "
-    //             {} -- {}.input;
-    //             ",
-    //             top_input_name,
-    //             component_name,
-    //         )
-    //     )
-    // }
+    fn num_outgoing_signals(&self) -> usize {
+        1
+    }
 
-    // fn to_til_top_output_signal(&self, component_name: &str, top_output_name: &str) -> Option<String> {
-    //     Some(
-    //         formatdoc!(
-    //             "
-    //             {}.output -- {};
-    //             ",
-    //             component_name,
-    //             top_output_name,
-    //         )
-    //     )
-    // }
+    fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+        TilStreamParam::new(
+            gen_params.bit_width,
+            gen_params.epc,
+            self.outer_nested + 1,
+            Synchronicity::Sync,
+            8,
+        )
+    }
+
+    fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+        TilStreamParam::new(
+            gen_params.bit_width,
+            gen_params.epc,
+            self.outer_nested + 2,
+            Synchronicity::Sync,
+            8,
+        )
+    }
 }
 
 impl JsonComponentValue for Array {

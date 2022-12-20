@@ -31,13 +31,13 @@ impl EntityManager {
         entity.set_streaming_interface(stream_interface);
 
         // Register entity
-        self.entity_list.insert(registered_name, entity.clone());
+        self.entity_list.insert(registered_name.to_string(), entity.clone());
 
         entity
     }
 
-    pub fn get_entity(&self, name: &str) -> Option<&TilComponent> {
-        self.entity_list.get(name)
+    pub fn register_top(&mut self, entity: TilComponent) {
+        self.entity_list.insert("Top".to_string(), entity);
     }
 
     pub fn generate_stream_defs(&self) -> String{
@@ -48,13 +48,13 @@ impl EntityManager {
 
             for stream in entity.streams.get_input_streams() {
                 local_stream_defs.push_str(
-                    &format!("{}: in {},\n", stream.get_name(), stream.get_type().name)
+                    &format!("{}: in {},\n", stream.get_name(), stream.get_type().get_name())
                 );
             }
 
             for stream in entity.streams.get_output_streams() {
                 local_stream_defs.push_str(
-                    &format!("{}: out {},\n", stream.get_name(), stream.get_type().name)
+                    &format!("{}: out {},\n", stream.get_name(), stream.get_type().get_name())
                 );
             }
 
