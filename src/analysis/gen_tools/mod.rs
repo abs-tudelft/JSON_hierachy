@@ -24,7 +24,7 @@ use std::collections::HashMap;
 
 use super::types::TilComponent;
 pub struct EntityManager {
-    entity_list: HashMap<String, TilComponent>,
+    entity_list: Vec<HashMap<String, TilComponent>>,
     name_reg: NameReg,
 }
 

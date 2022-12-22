@@ -6,7 +6,7 @@ use super::{Generator, components::{JsonComponent, JsonComponentValue}, til, typ
 
  fn generate_prelude() -> String {
     let mut prelude = String::new();
-    prelude.push_str("namespace schemaparser {\n\t");
+    prelude.push_str("namespace schema::parser {\n\t");
 
     prelude
 }
@@ -32,7 +32,7 @@ impl Generator {
         let top_component = self.analyze_from_top_component();
 
         // Register the top component
-        self.gen_tools.entity_manager.register_top(top_component);
+        self.gen_tools.entity_manager.register_top(top_component, 1);
 
         // Generate the type definitions
         let type_defs = self.gen_tools.type_manager.generate_type_defs();
@@ -48,7 +48,7 @@ impl Generator {
     }
 
     fn analyze_from_top_component(&mut self) -> TilComponent {
-        let mut top_component = TilComponent::new("Top");
+        let mut top_component = TilComponent::new("top");
 
         let top_input_type = TilStreamType::new(
             "TopInStream",
@@ -88,7 +88,7 @@ impl Generator {
                 // Generate TIL for the current component
                 if let Some(ref component) = current_component.get_if_generatable() {
                     // Register the component as an entity
-                    let til_comp = self.gen_tools.entity_manager.register(component, &self.gen_params, &mut self.gen_tools.type_manager);
+                    let til_comp = self.gen_tools.entity_manager.register(component, &self.gen_params, &mut self.gen_tools.type_manager, 0);
 
                     // Add the component definition to the top component
                     let inst_name = implementation.add_instance(til_comp.get_name().to_string());

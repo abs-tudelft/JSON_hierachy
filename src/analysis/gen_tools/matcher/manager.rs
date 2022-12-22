@@ -37,13 +37,13 @@ impl MatcherManager {
             Ok(String::from(vhdl))
         }) {
             Ok(vhdl) => {
-                let matchers_dir = format!("{}/matchers", gen_params.output_dir);
+                let matchers_dir = format!("{}/vhdl_dir", gen_params.output_dir);
 
                 // Create the matchers directory if it doesn't exist
                 std::fs::create_dir_all(&matchers_dir).unwrap();
 
                 // Write the VHDL code to a file
-                let mut file = std::fs::File::create(format!("{}/{}_matcher.vhd", &matchers_dir, &matcher)).unwrap();
+                let mut file = std::fs::File::create(format!("{}/schemaparser__{}_matcher.vhd", &matchers_dir, &matcher)).unwrap();
 
                 use std::io::Write;
                 file.write_fmt(format_args!("{}", vhdl)).unwrap();
