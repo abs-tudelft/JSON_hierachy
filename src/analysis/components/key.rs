@@ -27,15 +27,23 @@ impl Generatable for Key {
         interface.add_input_stream("input", input_type);
 
         // Matcher type
-        let matcher_type = TilStreamType::new(
-            "MatcherStream",
+        let matcher_str_type = TilStreamType::new(
+            "MatcherStrStream",
             self.matcher.get_input_type_params(gen_params)
         );
 
         // Register the matcher type
-        type_manager.register(matcher_type.clone());
-        interface.add_input_stream("matcherIn", matcher_type.clone());
-        interface.add_output_stream("matcherOut", matcher_type);
+        type_manager.register(matcher_str_type.clone());
+        interface.add_output_stream("matcher_str", matcher_str_type);
+
+        let matcher_match_type = TilStreamType::new(
+            "MatcherMatchStream",
+            self.matcher.get_output_type_params(gen_params)
+        );
+
+        // Register the matcher type
+        type_manager.register(matcher_match_type.clone());
+        interface.add_input_stream("matcher_match", matcher_match_type);
 
         // Output type
         let output_type = TilStreamType::new(
@@ -67,7 +75,7 @@ impl Generatable for Key {
 
     fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
         TilStreamParam::new(
-            gen_params.bit_width,
+            gen_params.bit_width + 1,
             gen_params.epc,
             self.outer_nested + 1,
             Synchronicity::Sync,

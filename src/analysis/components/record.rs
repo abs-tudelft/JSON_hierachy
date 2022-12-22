@@ -66,7 +66,7 @@ impl Generatable for Record {
 
     fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
         TilStreamParam::new(
-            gen_params.bit_width,
+            gen_params.bit_width + 1,
             gen_params.epc,
             self.outer_nested + 2,
             Synchronicity::Sync,

@@ -20,15 +20,22 @@ impl Generatable for Matcher {
         let mut interface = TilStreamingInterface::new();
 
         // Type generation
-        let matcher_type = TilStreamType::new(
-            "MatcherStream",
+        let input_type = TilStreamType::new(
+            "MatcherInStream",
             self.get_input_type_params(gen_params)
         );
 
         // Register the matcher type
-        type_manager.register(matcher_type.clone());
-        interface.add_input_stream("input", matcher_type.clone());
-        interface.add_output_stream("output", matcher_type);
+        type_manager.register(input_type.clone());
+        interface.add_input_stream("input", input_type);
+
+
+        let output_type = TilStreamType::new(
+            "MatcherOutStream",
+            self.get_output_type_params(gen_params)
+        );
+        type_manager.register(output_type.clone());
+        interface.add_output_stream("output", output_type);
 
         interface
     }
@@ -41,10 +48,10 @@ impl Generatable for Matcher {
         self.outer_nested
     }
 
-    fn get_signals(&self, instance_name: &Option<String>, instance_stream_name: &str, parent_name: &Option<String>, parent_stream_name: &str) -> Vec<TilSignal> {
+    fn get_signals(&self, instance_name: &Option<String>, _instance_stream_name: &str, parent_name: &Option<String>, _parent_stream_namee: &str) -> Vec<TilSignal> {
         vec![
-            TilSignal::new(parent_name, "matcherOut", instance_name, "input"),
-            TilSignal::new(instance_name, "output", parent_name, "matcherIn"),
+            TilSignal::new(parent_name, "matcher_str", instance_name, "input"),
+            TilSignal::new(instance_name, "output", parent_name, "matcher_match"),
         ]     
     }
 
@@ -54,7 +61,7 @@ impl Generatable for Matcher {
 
     fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
         TilStreamParam::new(
-            1,
+            gen_params.bit_width,
             gen_params.epc,
             1,
             Synchronicity::Sync,
@@ -63,7 +70,13 @@ impl Generatable for Matcher {
     }
 
     fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-        self.get_input_type_params(gen_params)
+        TilStreamParam::new(
+            1,
+            gen_params.epc,
+            1,
+            Synchronicity::Sync,
+            8
+        )
     }
 }
 
