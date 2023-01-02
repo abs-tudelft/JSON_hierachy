@@ -1,4 +1,4 @@
-use crate::analysis::{GeneratorParams, gen_tools::TypeManager, types::{TilStreamType, Synchronicity, TilStreamingInterface, TilSignal, TilStreamParam}};
+use crate::analysis::{GeneratorParams, gen_tools::{TypeManager, type_manager::StreamType}, types::{TilStreamingInterface, TilSignal}};
 
 use super::{Key, Generatable, JsonComponent, Matcher, JsonComponentValue};
 
@@ -18,41 +18,21 @@ impl Generatable for Key {
 
         // Type generation
         // Input type
-        let input_type = TilStreamType::new(
-            &format!("{}InStream", component_name),
-            self.get_input_type_params(gen_params)
-        );
-
-        type_manager.register(input_type.clone());
-        interface.add_input_stream("input", input_type);
+        type_manager.register(StreamType::Record);
+        interface.add_input_stream("input", StreamType::Record);
 
         // Matcher type
-        let matcher_str_type = TilStreamType::new(
-            "MatcherStrStream",
-            self.matcher.get_input_type_params(gen_params)
-        );
+        // Register the matcher type
+        type_manager.register(StreamType::MatcherStr);
+        interface.add_output_stream("matcher_str", StreamType::MatcherStr);
 
         // Register the matcher type
-        type_manager.register(matcher_str_type.clone());
-        interface.add_output_stream("matcher_str", matcher_str_type);
-
-        let matcher_match_type = TilStreamType::new(
-            "MatcherMatchStream",
-            self.matcher.get_output_type_params(gen_params)
-        );
-
-        // Register the matcher type
-        type_manager.register(matcher_match_type.clone());
-        interface.add_input_stream("matcher_match", matcher_match_type);
+        type_manager.register(StreamType::MatcherMatch);
+        interface.add_input_stream("matcher_match", StreamType::MatcherMatch);
 
         // Output type
-        let output_type = TilStreamType::new(
-            &format!("{}OutStream", component_name),
-            self.get_output_type_params(gen_params)
-        );
-
-        type_manager.register(output_type.clone());
-        interface.add_output_stream("output", output_type);        
+        type_manager.register(StreamType::Json);
+        interface.add_output_stream("output", StreamType::Json);        
 
         interface
     }
@@ -73,25 +53,25 @@ impl Generatable for Key {
         2
     }
 
-    fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-        TilStreamParam::new(
-            gen_params.bit_width + 1,
-            gen_params.epc,
-            self.outer_nested + 1,
-            Synchronicity::Sync,
-            8,
-        )
-    }
+    // fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+    //     TilStreamParam::new(
+    //         gen_params.bit_width + 1,
+    //         gen_params.epc,
+    //         self.outer_nested + 1,
+    //         Synchronicity::Sync,
+    //         8,
+    //     )
+    // }
 
-    fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-        TilStreamParam::new(
-            gen_params.bit_width,
-            gen_params.epc,
-            self.outer_nested + 1,
-            Synchronicity::Sync,
-            8,
-        )
-    }
+    // fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+    //     TilStreamParam::new(
+    //         gen_params.bit_width,
+    //         gen_params.epc,
+    //         self.outer_nested + 1,
+    //         Synchronicity::Sync,
+    //         8,
+    //     )
+    // }
 }
 
 impl JsonComponentValue for Key {

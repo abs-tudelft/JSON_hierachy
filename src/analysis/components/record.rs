@@ -1,4 +1,4 @@
-use crate::analysis::{GeneratorParams, types::{TilStreamType, Synchronicity, TilStreamingInterface, TilSignal, TilStreamParam}, gen_tools::TypeManager};
+use crate::analysis::{GeneratorParams, types::{TilStreamingInterface, TilSignal}, gen_tools::{TypeManager, type_manager::StreamType}};
 
 use super::{Record, JsonComponent, Generatable, Key, JsonComponentValue};
 
@@ -18,22 +18,12 @@ impl Generatable for Record {
 
         // Type generation
         // Input type
-        let input_type = TilStreamType::new(
-            &format!("{}InStream", component_name),
-            self.get_input_type_params(gen_params)
-        );
-
-        type_manager.register(input_type.clone());
-        interface.add_input_stream("input", input_type);
+        type_manager.register(StreamType::Json);
+        interface.add_input_stream("input", StreamType::Json);
 
         // Output type
-        let output_type = TilStreamType::new(
-            &format!("{}OutStream", component_name),
-            self.get_output_type_params(gen_params)
-        );
-
-        type_manager.register(output_type.clone());
-        interface.add_output_stream("output", output_type);
+        type_manager.register(StreamType::Record);
+        interface.add_output_stream("output", StreamType::Record);
 
         interface
     }
@@ -54,25 +44,25 @@ impl Generatable for Record {
         1
     }
 
-    fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-        TilStreamParam::new(
-            gen_params.bit_width,
-            gen_params.epc,
-            self.outer_nested + 1,
-            Synchronicity::Sync,
-            8,
-        )
-    }
+    // fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+    //     TilStreamParam::new(
+    //         gen_params.bit_width,
+    //         gen_params.epc,
+    //         self.outer_nested + 1,
+    //         Synchronicity::Sync,
+    //         8,
+    //     )
+    // }
 
-    fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-        TilStreamParam::new(
-            gen_params.bit_width + 1,
-            gen_params.epc,
-            self.outer_nested + 2,
-            Synchronicity::Sync,
-            8,
-        )
-    }
+    // fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+    //     TilStreamParam::new(
+    //         gen_params.bit_width + 1,
+    //         gen_params.epc,
+    //         self.outer_nested + 2,
+    //         Synchronicity::Sync,
+    //         8,
+    //     )
+    // }
 }
 
 impl JsonComponentValue for Record {

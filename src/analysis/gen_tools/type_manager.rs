@@ -1,62 +1,131 @@
-use std::collections::HashMap;
+use enum_map::{Enum, EnumMap};
+use indoc::writedoc;
 
-use indoc::formatdoc;
-
-use crate::analysis::types::TilStreamType;
+use crate::analysis::{types::Synchronicity, GeneratorParams};
 
 use super::TypeManager;
 
 impl TypeManager {
     pub fn new() -> TypeManager {
+        let map: EnumMap<StreamType, bool> = EnumMap::default();
+
+        // Set all type usage to false
+        map.map(|_, _| false);
+
         TypeManager {
-            type_list: HashMap::new(),
+            type_list: map,
         }
     }
 
     /// Register a new data type
-    /// 
-    /// Returns true if the data type was already registered
-    pub fn register(&mut self, stream_type: TilStreamType) {
-        let type_name: &str = stream_type.get_name();
-
-        if !self.does_type_exist(type_name) {
-            self.type_list.insert(type_name.to_owned(), stream_type);
-        }
+    pub fn register(&mut self, stream_type: StreamType) {
+        self.type_list[stream_type] = true;
     }
 
-    pub fn does_type_exist(&self, data_type: &str) -> bool {
-        self.type_list.contains_key(&String::from(data_type))
-    }
-
-    pub fn generate_type_defs(&self) -> String {
+    pub fn generate_type_defs(&self, gen_params: &GeneratorParams) -> String {
         let mut type_defs = String::new();
 
-        for (type_name, stream_type) in &self.type_list {
-            let type_params = stream_type.get_params();
+        for (stream_type, type_exists) in &self.type_list {
+            if *type_exists {
+                let type_params = stream_type.get_type_params(gen_params);
 
-            type_defs.push_str(
-                &formatdoc!(
-                    "
-                    type {} = Stream (
-                        data: Bits({}),
-                        throughput: {},
-                        dimensionality: {},
-                        synchronicity: {:?},
-                        complexity: {},
-                    );
-                    ",
-                    type_name,
-                    type_params.data_bits,
-                    type_params.throughput,
-                    type_params.dimensionality,
-                    type_params.synchronicity,
-                    type_params.complexity,
-                )
-            );
-
-            type_defs.push('\n');
-        }
+                let dim_str = match type_params.dimensionality {
+                    Dimensionality::Fixed(_) => "".to_string(),
+                    Dimensionality::Generic => format!("<{}: dimensionality = 2>", Dimensionality::Generic),
+                };
+                
+                type_defs.push_str(&format!("type {}{} = {};\n\n", stream_type.get_name(), dim_str, type_params));
+            }
+        };
 
         type_defs
+    }
+}
+
+#[derive(Enum, Clone)]
+pub enum StreamType {
+    Json,
+    Int,
+    Bool,
+    Record,
+    MatcherMatch,
+    MatcherStr,
+}
+
+impl StreamType {
+    pub fn get_name(&self) -> &str {
+        match self {
+            StreamType::Json => "JSONStream",
+            StreamType::Int => "IntParserStream",
+            StreamType::Bool => "BoolParserStream",
+            StreamType::Record => "RecordParserStream",
+            StreamType::MatcherMatch => "MatcherMatchStream",
+            StreamType::MatcherStr => "MatcherStrStream",
+        }
+    }
+
+    fn get_type_params(&self, gen_params: &GeneratorParams) -> StreamParams {
+        match self {
+            StreamType::Json =>  StreamParams::new(gen_params.bit_width, gen_params.epc, Dimensionality::Generic, Synchronicity::Sync, 8),
+            StreamType::Int => StreamParams::new(gen_params.int_width, 1, Dimensionality::Generic, Synchronicity::Sync, 2),
+            StreamType::Bool => StreamParams::new(1, 1, Dimensionality::Generic, Synchronicity::Sync, 2),
+            StreamType::Record => StreamParams::new(gen_params.bit_width + 1, gen_params.epc, Dimensionality::Generic, Synchronicity::Sync, 8),
+            StreamType::MatcherMatch => StreamParams::new(1, gen_params.epc, Dimensionality::Fixed(1), Synchronicity::Sync, 8),
+            StreamType::MatcherStr => StreamParams::new(gen_params.bit_width, gen_params.epc, Dimensionality::Fixed(1), Synchronicity::Sync, 8),
+        }
+    }
+}
+
+struct StreamParams {
+    pub data_bits: usize,
+    pub throughput: usize,
+    pub dimensionality: Dimensionality,
+    pub synchronicity: Synchronicity,
+    pub complexity: u8,
+}
+
+impl StreamParams {
+    fn new(data_bits: usize, throughput: usize, dimensionality: Dimensionality, synchronicity: Synchronicity, complexity: u8) -> Self {
+        StreamParams {
+            data_bits,
+            throughput,
+            dimensionality,
+            synchronicity,
+            complexity,
+        }
+    }
+}
+
+impl std::fmt::Display for StreamParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writedoc!(
+            f,
+            "Stream (
+                data: Bits({}),
+                throughput: {},
+                dimensionality: {},
+                synchronicity: {:?},
+                complexity: {},
+            )",
+            self.data_bits,
+            self.throughput,
+            self.dimensionality,
+            self.synchronicity,
+            self.complexity,
+        )
+    }
+}
+
+enum Dimensionality {
+    Fixed(usize),
+    Generic
+}
+
+impl std::fmt::Display for Dimensionality {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Dimensionality::Fixed(d) => write!(f, "{}", d),
+            Dimensionality::Generic => write!(f, "d"),
+        }
     }
 }

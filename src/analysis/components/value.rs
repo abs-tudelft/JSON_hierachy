@@ -1,4 +1,4 @@
-use crate::analysis::{GeneratorParams, gen_tools::TypeManager, types::{TilStreamType, Synchronicity, TilStreamingInterface, TilSignal, TilStreamParam}};
+use crate::analysis::{GeneratorParams, gen_tools::{TypeManager, type_manager::StreamType}, types::{TilStreamingInterface, TilSignal}};
 
 use super::{JsonComponent, JsonType, Value, Generatable, JsonComponentValue};
 
@@ -13,76 +13,38 @@ impl Value {
 
 impl Generatable for Value {
     fn get_streaming_interface(&self, component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface {
+        let mut interface = TilStreamingInterface::new();
+
         match self.data_type {
             JsonType::String => {
-                let mut interface = TilStreamingInterface::new();
-
                 // Type generation
-                // Input type
-                let input_type = TilStreamType::new(
-                    &format!("{}InStream", component_name),
-                    self.get_input_type_params(gen_params)
-                );
-
-                type_manager.register(input_type.clone());
-                interface.add_input_stream("input", input_type);
-
-                // Output type
-                let output_type = TilStreamType::new(
-                    &format!("{}OutStream", component_name),
-                    self.get_output_type_params(gen_params)
-                );
-
-                type_manager.register(output_type.clone());
-                interface.add_output_stream("output", output_type);
+                type_manager.register(StreamType::Json);
+                interface.add_input_stream("input", StreamType::Json);
+                interface.add_output_stream("output", StreamType::Json);
 
                 interface
             },
             JsonType::Integer => {
-                let mut interface = TilStreamingInterface::new();
-
                 // Type generation
                 // Input type
-                let input_type = TilStreamType::new(
-                    &format!("{}InStream", component_name),
-                    self.get_input_type_params(gen_params)
-                );
-
-                type_manager.register(input_type.clone());
-                interface.add_input_stream("input", input_type);
+                type_manager.register(StreamType::Json);
+                interface.add_input_stream("input", StreamType::Json);
 
                 // Output type
-                let output_type = TilStreamType::new(
-                    &format!("{}OutStream", component_name),
-                    self.get_output_type_params(gen_params)
-                );
-
-                type_manager.register(output_type.clone());
-                interface.add_output_stream("output", output_type);
+                type_manager.register(StreamType::Int);
+                interface.add_output_stream("output", StreamType::Int);
 
                 interface
             },
             JsonType::Boolean => {
-                let mut interface = TilStreamingInterface::new();
-
                 // Type generation
-                // Input type
-                let input_type = TilStreamType::new(
-                    &format!("{}InStream", component_name),
-                    self.get_input_type_params(gen_params)
-                );
-
-                type_manager.register(input_type.clone());
-                interface.add_input_stream("input", input_type);
+                // Input type;
+                type_manager.register(StreamType::Json);
+                interface.add_input_stream("input", StreamType::Json);
 
                 // Output type
-                let output_type = TilStreamType::new(
-                    &format!("{}OutStream", component_name),
-                    self.get_output_type_params(gen_params)
-                );
-
-                type_manager.register(output_type.clone());
-                interface.add_output_stream("output", output_type);
+                type_manager.register(StreamType::Bool);
+                interface.add_output_stream("output", StreamType::Bool);
 
                 interface
             }
@@ -109,41 +71,41 @@ impl Generatable for Value {
         0
     }
 
-    fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-        TilStreamParam::new(
-            gen_params.bit_width, 
-            gen_params.epc, 
-            self.outer_nested + 1, 
-            Synchronicity::Sync,
-            8
-        )
-    }
+    // fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+    //     TilStreamParam::new(
+    //         gen_params.bit_width, 
+    //         gen_params.epc, 
+    //         self.outer_nested + 1, 
+    //         Synchronicity::Sync,
+    //         8
+    //     )
+    // }
 
-    fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-        match self.data_type {
-            JsonType::String => TilStreamParam::new(
-                gen_params.bit_width,
-                gen_params.epc,
-                self.outer_nested + 1,
-                Synchronicity::Sync,
-                8,
-            ),
-            JsonType::Integer => TilStreamParam::new(
-                gen_params.int_width,
-                1,
-                self.outer_nested,
-                Synchronicity::Sync,
-                2,
-            ),
-            JsonType::Boolean => TilStreamParam::new(
-                1,
-                1,
-                self.outer_nested,
-                Synchronicity::Sync,
-                2,
-            ),
-        }
-    }
+    // fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+    //     match self.data_type {
+    //         JsonType::String => TilStreamParam::new(
+    //             gen_params.bit_width,
+    //             gen_params.epc,
+    //             self.outer_nested + 1,
+    //             Synchronicity::Sync,
+    //             8,
+    //         ),
+    //         JsonType::Integer => TilStreamParam::new(
+    //             gen_params.int_width,
+    //             1,
+    //             self.outer_nested,
+    //             Synchronicity::Sync,
+    //             2,
+    //         ),
+    //         JsonType::Boolean => TilStreamParam::new(
+    //             1,
+    //             1,
+    //             self.outer_nested,
+    //             Synchronicity::Sync,
+    //             2,
+    //         ),
+    //     }
+    // }
 }
 
 impl JsonComponentValue for Value {

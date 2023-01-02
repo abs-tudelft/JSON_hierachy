@@ -1,4 +1,4 @@
-use super::{Generator, components::{JsonComponent, JsonComponentValue}, til, types::{TilComponent, TilInlineImplementation, TilImplementationType, TilStreamType, Synchronicity, TilStreamParam, TilSignal}};
+use super::{Generator, components::{JsonComponent, JsonComponentValue}, til, types::{TilComponent, TilInlineImplementation, TilImplementationType, TilStreamType, Synchronicity, TilStreamParam, TilSignal}, gen_tools::type_manager::StreamType};
 
 /**********************************************************************************
  * Set of functions to generate VHDL code around the components                   *
@@ -35,7 +35,7 @@ impl Generator {
         self.gen_tools.entity_manager.register_top(top_component, 1);
 
         // Generate the type definitions
-        let type_defs = self.gen_tools.type_manager.generate_type_defs();
+        let type_defs = self.gen_tools.type_manager.generate_type_defs(&self.gen_params);
         til.push_str(&type_defs);
 
         // Generate the stream definitions
@@ -50,20 +50,21 @@ impl Generator {
     fn analyze_from_top_component(&mut self) -> TilComponent {
         let mut top_component = TilComponent::new("top");
 
-        let top_input_type = TilStreamType::new(
-            "TopInStream",
-            TilStreamParam::new(
-                self.gen_params.bit_width,
-                self.gen_params.epc,
-                2,
-                Synchronicity::Sync,
-                8
-            )
-        );
+        // let top_input_type = TilStreamType::new(
+        //     "TopInStream",
+        //     TilStreamParam::new(
+        //         self.gen_params.bit_width,
+        //         self.gen_params.epc,
+        //         2,
+        //         Synchronicity::Sync,
+        //         8
+        //     )
+        // );
 
         // Create input stream for the top component
-        top_component.get_streams_mut().add_input_stream("input", top_input_type.clone());
-        self.gen_tools.type_manager.register(top_input_type);
+        self.gen_tools.type_manager.register(StreamType::Json);
+        top_component.get_streams_mut().add_input_stream("input", StreamType::Json);
+        
 
         // Check if there is a root component
         if let Some(root) = &self.root {

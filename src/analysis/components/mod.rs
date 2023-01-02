@@ -7,7 +7,7 @@ pub enum JsonType {
 
 use crate::analysis::{GeneratorParams};
 
-use super::{types::{TilStreamingInterface, TilSignal, TilStreamParam}, gen_tools::TypeManager};
+use super::{types::{TilStreamingInterface, TilSignal}, gen_tools::{TypeManager}};
 
 pub trait Generatable {
     
@@ -16,8 +16,8 @@ pub trait Generatable {
     /// 
     /// Returns a tuple of (component_name, til_streamlet_definition)
     
-    fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam;
-    fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam;
+    // fn get_input_type_params(&self, gen_params: &GeneratorParams) -> StreamType;
+    // fn get_output_type_params(&self, gen_params: &GeneratorParams) -> StreamType;
     fn get_streaming_interface(&self, component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface;
     fn get_signals(&self, instance_name: &Option<String>, instance_stream_name: &str, parent_name: &Option<String>, parent_stream_name: &str) -> Vec<TilSignal>;
     fn num_outgoing_signals(&self) -> usize;

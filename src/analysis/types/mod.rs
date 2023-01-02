@@ -1,3 +1,5 @@
+use super::gen_tools::type_manager::StreamType;
+
 #[derive(Clone)]
 pub struct TilComponent {
     name: String,
@@ -159,7 +161,7 @@ impl TilStreamingInterface {
         }
     }
 
-    pub fn add_input_stream(&mut self, stream_name: &str, stream_type: TilStreamType) {
+    pub fn add_input_stream(&mut self, stream_name: &str, stream_type: StreamType) {
         self.input.push(
             TilStream {
                 name: String::from(stream_name),
@@ -168,7 +170,7 @@ impl TilStreamingInterface {
         );
     }
 
-    pub fn add_output_stream(&mut self, stream_name: &str, stream_type: TilStreamType) {
+    pub fn add_output_stream(&mut self, stream_name: &str, stream_type: StreamType) {
         self.output.push(
             TilStream {
                 name: String::from(stream_name),
@@ -189,11 +191,11 @@ impl TilStreamingInterface {
 #[derive(Clone)]
 pub struct TilStream {
     name: String,
-    stream_type: TilStreamType,
+    stream_type: StreamType,
 }
 
 impl TilStream {
-    pub fn new(stream_name: &str, stream_type: TilStreamType) -> TilStream {
+    pub fn new(stream_name: &str, stream_type: StreamType) -> TilStream {
         TilStream {
             name: String::from(stream_name),
             stream_type
@@ -204,7 +206,7 @@ impl TilStream {
         &self.name
     }
 
-    pub fn get_type(&self) -> &TilStreamType {
+    pub fn get_type(&self) -> &StreamType {
         &self.stream_type
     }
 }
@@ -251,8 +253,6 @@ impl TilStreamParam {
             complexity,
         }
     }
-
-    
 }
 
 #[derive(Debug, Clone)]

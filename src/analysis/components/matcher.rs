@@ -1,4 +1,4 @@
-use crate::analysis::{GeneratorParams, types::{TilStreamType, Synchronicity, TilStreamingInterface, TilSignal, TilStreamParam}, gen_tools::TypeManager};
+use crate::analysis::{GeneratorParams, types::{TilStreamingInterface, TilSignal}, gen_tools::{TypeManager, type_manager::StreamType}};
 
 use super::{JsonComponent, Matcher, Generatable, JsonComponentValue};
 
@@ -20,22 +20,13 @@ impl Generatable for Matcher {
         let mut interface = TilStreamingInterface::new();
 
         // Type generation
-        let input_type = TilStreamType::new(
-            "MatcherInStream",
-            self.get_input_type_params(gen_params)
-        );
+        // Register the matcher type
+        type_manager.register(StreamType::MatcherStr);
+        interface.add_input_stream("input", StreamType::MatcherStr);
 
         // Register the matcher type
-        type_manager.register(input_type.clone());
-        interface.add_input_stream("input", input_type);
-
-
-        let output_type = TilStreamType::new(
-            "MatcherOutStream",
-            self.get_output_type_params(gen_params)
-        );
-        type_manager.register(output_type.clone());
-        interface.add_output_stream("output", output_type);
+        type_manager.register(StreamType::MatcherMatch);
+        interface.add_output_stream("output", StreamType::MatcherStr);
 
         interface
     }
@@ -59,25 +50,25 @@ impl Generatable for Matcher {
         1
     }
 
-    fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-        TilStreamParam::new(
-            gen_params.bit_width,
-            gen_params.epc,
-            1,
-            Synchronicity::Sync,
-            8
-        )
-    }
+    // fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+    //     TilStreamParam::new(
+    //         gen_params.bit_width,
+    //         gen_params.epc,
+    //         1,
+    //         Synchronicity::Sync,
+    //         8
+    //     )
+    // }
 
-    fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-        TilStreamParam::new(
-            1,
-            gen_params.epc,
-            1,
-            Synchronicity::Sync,
-            8
-        )
-    }
+    // fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
+    //     TilStreamParam::new(
+    //         1,
+    //         gen_params.epc,
+    //         1,
+    //         Synchronicity::Sync,
+    //         8
+    //     )
+    // }
 }
 
 impl JsonComponentValue for Matcher {

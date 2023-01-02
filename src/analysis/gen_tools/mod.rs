@@ -4,6 +4,7 @@ pub mod matcher;
 pub mod type_manager;
 
 use self::matcher::MatcherManager;
+use self::type_manager::StreamType;
 pub struct GenTools {
     pub entity_manager: EntityManager,
     pub match_manager: MatcherManager,
@@ -32,7 +33,7 @@ struct NameReg {
     name_map: HashMap<String, u32>,
 }
 
-use super::types::TilStreamType;
+use enum_map::EnumMap;
 pub struct TypeManager {
-    type_list: HashMap<String, TilStreamType>,
+    type_list: EnumMap<StreamType, bool>,
 }
