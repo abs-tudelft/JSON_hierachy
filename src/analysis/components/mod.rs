@@ -5,9 +5,7 @@ pub enum JsonType {
     Boolean,
 }
 
-use crate::analysis::{GeneratorParams};
-
-use super::{types::{TilStreamingInterface, TilSignal}, gen_tools::{TypeManager}};
+use super::{types::{TilStreamingInterface, TilSignal}, gen_tools::{type_manager::StreamType}};
 
 pub trait Generatable {
     
@@ -18,7 +16,8 @@ pub trait Generatable {
     
     // fn get_input_type_params(&self, gen_params: &GeneratorParams) -> StreamType;
     // fn get_output_type_params(&self, gen_params: &GeneratorParams) -> StreamType;
-    fn get_streaming_interface(&self, component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface;
+    fn get_streaming_interface(&self) -> TilStreamingInterface;
+    fn get_streaming_types(&self) -> Vec<StreamType>;
     fn get_signals(&self, instance_name: &Option<String>, instance_stream_name: &str, parent_name: &Option<String>, parent_stream_name: &str) -> Vec<TilSignal>;
     fn num_outgoing_signals(&self) -> usize;
     fn get_preffered_name(&self) -> String;

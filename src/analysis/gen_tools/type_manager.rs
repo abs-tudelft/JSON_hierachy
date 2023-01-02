@@ -1,7 +1,7 @@
 use enum_map::{Enum, EnumMap};
 use indoc::writedoc;
 
-use crate::analysis::{types::Synchronicity, GeneratorParams};
+use crate::analysis::GeneratorParams;
 
 use super::TypeManager;
 
@@ -33,7 +33,7 @@ impl TypeManager {
                     Dimensionality::Fixed(_) => "".to_string(),
                     Dimensionality::Generic => format!("<{}: dimensionality = 2>", Dimensionality::Generic),
                 };
-                
+
                 type_defs.push_str(&format!("type {}{} = {};\n\n", stream_type.get_name(), dim_str, type_params));
             }
         };
@@ -128,4 +128,13 @@ impl std::fmt::Display for Dimensionality {
             Dimensionality::Generic => write!(f, "d"),
         }
     }
+}
+
+#[allow(dead_code)]
+#[derive(Debug)]
+enum Synchronicity {
+    Sync,
+    Flatten,
+    Desync,
+    FlatDesync,
 }

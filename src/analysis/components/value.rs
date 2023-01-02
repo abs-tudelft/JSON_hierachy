@@ -1,4 +1,4 @@
-use crate::analysis::{GeneratorParams, gen_tools::{TypeManager, type_manager::StreamType}, types::{TilStreamingInterface, TilSignal}};
+use crate::analysis::{gen_tools::{type_manager::StreamType}, types::{TilStreamingInterface, TilSignal}};
 
 use super::{JsonComponent, JsonType, Value, Generatable, JsonComponentValue};
 
@@ -12,42 +12,45 @@ impl Value {
 }
 
 impl Generatable for Value {
-    fn get_streaming_interface(&self, component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface {
+    fn get_streaming_interface(&self) -> TilStreamingInterface {
         let mut interface = TilStreamingInterface::new();
 
         match self.data_type {
             JsonType::String => {
-                // Type generation
-                type_manager.register(StreamType::Json);
+                // Input type
                 interface.add_input_stream("input", StreamType::Json);
+
+                // Output type
                 interface.add_output_stream("output", StreamType::Json);
 
                 interface
             },
             JsonType::Integer => {
-                // Type generation
                 // Input type
-                type_manager.register(StreamType::Json);
                 interface.add_input_stream("input", StreamType::Json);
 
                 // Output type
-                type_manager.register(StreamType::Int);
                 interface.add_output_stream("output", StreamType::Int);
 
                 interface
             },
             JsonType::Boolean => {
-                // Type generation
-                // Input type;
-                type_manager.register(StreamType::Json);
+                // Input type
                 interface.add_input_stream("input", StreamType::Json);
 
                 // Output type
-                type_manager.register(StreamType::Bool);
                 interface.add_output_stream("output", StreamType::Bool);
 
                 interface
             }
+        }
+    }
+
+    fn get_streaming_types(&self) -> Vec<StreamType> {
+        match self.data_type {
+            JsonType::String => vec![StreamType::Json],
+            JsonType::Integer => vec![StreamType::Json, StreamType::Int],
+            JsonType::Boolean => vec![StreamType::Json, StreamType::Bool],
         }
     }
 
@@ -70,42 +73,6 @@ impl Generatable for Value {
     fn num_outgoing_signals(&self) -> usize {
         0
     }
-
-    // fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-    //     TilStreamParam::new(
-    //         gen_params.bit_width, 
-    //         gen_params.epc, 
-    //         self.outer_nested + 1, 
-    //         Synchronicity::Sync,
-    //         8
-    //     )
-    // }
-
-    // fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-    //     match self.data_type {
-    //         JsonType::String => TilStreamParam::new(
-    //             gen_params.bit_width,
-    //             gen_params.epc,
-    //             self.outer_nested + 1,
-    //             Synchronicity::Sync,
-    //             8,
-    //         ),
-    //         JsonType::Integer => TilStreamParam::new(
-    //             gen_params.int_width,
-    //             1,
-    //             self.outer_nested,
-    //             Synchronicity::Sync,
-    //             2,
-    //         ),
-    //         JsonType::Boolean => TilStreamParam::new(
-    //             1,
-    //             1,
-    //             self.outer_nested,
-    //             Synchronicity::Sync,
-    //             2,
-    //         ),
-    //     }
-    // }
 }
 
 impl JsonComponentValue for Value {

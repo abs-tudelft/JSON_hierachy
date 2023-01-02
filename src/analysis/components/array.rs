@@ -1,4 +1,4 @@
-use crate::analysis::{GeneratorParams, types::{TilStreamingInterface, TilSignal}, gen_tools::{TypeManager, type_manager::StreamType}};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal}, gen_tools::{type_manager::StreamType}};
 
 use super::{Array, JsonComponent, Generatable, JsonComponentValue};
 
@@ -13,11 +13,8 @@ impl Array {
 }
 
 impl Generatable for Array {
-    fn get_streaming_interface(&self, component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface {       
+    fn get_streaming_interface(&self) -> TilStreamingInterface {       
         let mut interface = TilStreamingInterface::new();
-
-        // Generate types for this component
-        type_manager.register(StreamType::Json);
 
         // Input type
         interface.add_input_stream("input", StreamType::Json);
@@ -26,6 +23,10 @@ impl Generatable for Array {
         interface.add_output_stream("output", StreamType::Json);
 
         interface
+    }
+
+    fn get_streaming_types(&self) -> Vec<StreamType> {
+        vec![StreamType::Json]
     }
 
     fn get_preffered_name(&self) -> String {
@@ -43,26 +44,6 @@ impl Generatable for Array {
     fn num_outgoing_signals(&self) -> usize {
         1
     }
-
-    // fn get_input_type_params(&self, gen_params: &GeneratorParams) -> StreamType {
-    //     TilStreamParam::new(
-    //         gen_params.bit_width,
-    //         gen_params.epc,
-    //         self.outer_nested + 1,
-    //         Synchronicity::Sync,
-    //         8,
-    //     )
-    // }
-
-    // fn get_output_type_params(&self, gen_params: &GeneratorParams) -> StreamType {
-    //     TilStreamParam::new(
-    //         gen_params.bit_width,
-    //         gen_params.epc,
-    //         self.outer_nested + 2,
-    //         Synchronicity::Sync,
-    //         8,
-    //     )
-    // }
 }
 
 impl JsonComponentValue for Array {

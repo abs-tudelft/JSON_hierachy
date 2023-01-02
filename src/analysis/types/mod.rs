@@ -63,7 +63,7 @@ impl TilInlineImplementation {
 
     pub fn add_instance(&mut self, component_name: String) -> String{
         let instance_name = format!("{}_inst", component_name);
-        self.instances.push(TilInstance::new(&component_name, &instance_name.clone()));
+        self.instances.push(TilInstance::new(&component_name, &instance_name));
         instance_name
     }
 
@@ -195,13 +195,6 @@ pub struct TilStream {
 }
 
 impl TilStream {
-    pub fn new(stream_name: &str, stream_type: StreamType) -> TilStream {
-        TilStream {
-            name: String::from(stream_name),
-            stream_type
-        }
-    }
-
     pub fn get_name(&self) -> &str {
         &self.name
     }
@@ -209,56 +202,4 @@ impl TilStream {
     pub fn get_type(&self) -> &StreamType {
         &self.stream_type
     }
-}
-
-#[derive(Clone)]
-pub struct TilStreamType {
-    name: String,
-    params: TilStreamParam
-}
-
-impl TilStreamType {
-    pub fn new(type_name: &str, stream_params: TilStreamParam) -> TilStreamType {
-        TilStreamType {
-            name: String::from(type_name),
-            params: stream_params
-        }
-    }
-
-    pub fn get_name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn get_params(&self) -> &TilStreamParam {
-        &self.params
-    }
-}
-
-#[derive(Clone)]
-pub struct TilStreamParam {
-    pub data_bits: usize,
-    pub throughput: usize,
-    pub dimensionality: usize,
-    pub synchronicity: Synchronicity,
-    pub complexity: u8,
-}
-
-impl TilStreamParam {
-    pub fn new(data_bits: usize, throughput: usize, dimensionality: usize, synchronicity: Synchronicity, complexity: u8) -> TilStreamParam {
-        TilStreamParam {
-            data_bits,
-            throughput,
-            dimensionality,
-            synchronicity,
-            complexity,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub enum Synchronicity {
-    Sync,
-    Flatten,
-    Desync,
-    FlatDesync,
 }

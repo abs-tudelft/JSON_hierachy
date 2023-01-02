@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use indoc::formatdoc;
 
-use crate::analysis::{types::{TilComponent, TilImplementationType}, components::Generatable, GeneratorParams};
+use crate::analysis::{types::{TilComponent, TilImplementationType}, components::Generatable};
 
 use super::{EntityManager, NameReg, TypeManager};
 
@@ -14,7 +14,7 @@ impl EntityManager {
         }
     }
 
-    pub fn register(&mut self, json_component: &&dyn Generatable, gen_params: &GeneratorParams, type_manager: &mut TypeManager, weight: usize) -> TilComponent {
+    pub fn register(&mut self, json_component: &&dyn Generatable, type_manager: &mut TypeManager, weight: usize) -> TilComponent {
         let name = json_component.get_preffered_name();
         let nesting_level = json_component.get_nesting_level();
 
@@ -25,10 +25,15 @@ impl EntityManager {
         let mut entity = TilComponent::new(&registered_name);
 
         // Generate streaming interface
-        let stream_interface = json_component.get_streaming_interface(&registered_name, gen_params, type_manager);
+        let stream_interface = json_component.get_streaming_interface();
 
         // Add interface to component
         entity.set_streaming_interface(stream_interface);
+
+        // Add types to type manager
+        for stream_type in json_component.get_streaming_types() {
+            type_manager.register(stream_type);
+        }
 
         // Set implementation path
         entity.set_implementation(TilImplementationType::Path("./vhdl_dir".to_string()));

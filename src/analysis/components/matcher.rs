@@ -1,4 +1,4 @@
-use crate::analysis::{GeneratorParams, types::{TilStreamingInterface, TilSignal}, gen_tools::{TypeManager, type_manager::StreamType}};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal}, gen_tools::{type_manager::StreamType}};
 
 use super::{JsonComponent, Matcher, Generatable, JsonComponentValue};
 
@@ -16,19 +16,20 @@ impl Matcher {
 }
 
 impl Generatable for Matcher {
-    fn get_streaming_interface(&self, _component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface {
+    fn get_streaming_interface(&self) -> TilStreamingInterface {
         let mut interface = TilStreamingInterface::new();
 
-        // Type generation
-        // Register the matcher type
-        type_manager.register(StreamType::MatcherStr);
+        // Input type
         interface.add_input_stream("input", StreamType::MatcherStr);
 
-        // Register the matcher type
-        type_manager.register(StreamType::MatcherMatch);
-        interface.add_output_stream("output", StreamType::MatcherStr);
+        // Output type
+        interface.add_output_stream("output", StreamType::MatcherMatch);
 
         interface
+    }
+
+    fn get_streaming_types(&self) -> Vec<StreamType> {
+        vec![StreamType::MatcherStr, StreamType::MatcherMatch]
     }
 
     fn get_preffered_name(&self) -> String {
@@ -49,26 +50,6 @@ impl Generatable for Matcher {
     fn num_outgoing_signals(&self) -> usize {
         1
     }
-
-    // fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-    //     TilStreamParam::new(
-    //         gen_params.bit_width,
-    //         gen_params.epc,
-    //         1,
-    //         Synchronicity::Sync,
-    //         8
-    //     )
-    // }
-
-    // fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-    //     TilStreamParam::new(
-    //         1,
-    //         gen_params.epc,
-    //         1,
-    //         Synchronicity::Sync,
-    //         8
-    //     )
-    // }
 }
 
 impl JsonComponentValue for Matcher {

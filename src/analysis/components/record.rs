@@ -1,4 +1,4 @@
-use crate::analysis::{GeneratorParams, types::{TilStreamingInterface, TilSignal}, gen_tools::{TypeManager, type_manager::StreamType}};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal}, gen_tools::{type_manager::StreamType}};
 
 use super::{Record, JsonComponent, Generatable, Key, JsonComponentValue};
 
@@ -13,19 +13,20 @@ impl Record {
 }
 
 impl Generatable for Record {
-    fn get_streaming_interface(&self, component_name: &str, gen_params: &GeneratorParams, type_manager: &mut TypeManager) -> TilStreamingInterface {
+    fn get_streaming_interface(&self) -> TilStreamingInterface {
         let mut interface = TilStreamingInterface::new();
 
-        // Type generation
         // Input type
-        type_manager.register(StreamType::Json);
         interface.add_input_stream("input", StreamType::Json);
 
         // Output type
-        type_manager.register(StreamType::Record);
         interface.add_output_stream("output", StreamType::Record);
 
         interface
+    }
+
+    fn get_streaming_types(&self) -> Vec<StreamType> {
+        vec![StreamType::Json, StreamType::Record]
     }
 
     fn get_preffered_name(&self) -> String {
@@ -43,26 +44,6 @@ impl Generatable for Record {
     fn num_outgoing_signals(&self) -> usize {
         1
     }
-
-    // fn get_input_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-    //     TilStreamParam::new(
-    //         gen_params.bit_width,
-    //         gen_params.epc,
-    //         self.outer_nested + 1,
-    //         Synchronicity::Sync,
-    //         8,
-    //     )
-    // }
-
-    // fn get_output_type_params(&self, gen_params: &GeneratorParams) -> TilStreamParam {
-    //     TilStreamParam::new(
-    //         gen_params.bit_width + 1,
-    //         gen_params.epc,
-    //         self.outer_nested + 2,
-    //         Synchronicity::Sync,
-    //         8,
-    //     )
-    // }
 }
 
 impl JsonComponentValue for Record {

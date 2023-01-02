@@ -1,4 +1,4 @@
-use super::{Generator, components::{JsonComponent, JsonComponentValue}, til, types::{TilComponent, TilInlineImplementation, TilImplementationType, TilStreamType, Synchronicity, TilStreamParam, TilSignal}, gen_tools::type_manager::StreamType};
+use super::{Generator, components::{JsonComponent, JsonComponentValue}, til, types::{TilComponent, TilInlineImplementation, TilImplementationType, TilSignal}, gen_tools::type_manager::StreamType};
 
 /**********************************************************************************
  * Set of functions to generate VHDL code around the components                   *
@@ -75,10 +75,7 @@ impl Generator {
             let mut stack: Vec<TreeComponent> = Vec::new();
 
             // Add the root component to the stack
-            stack.push(TreeComponent { parent_name: None, component: root.to_owned() });
-
-            // If the parent name is None, it means that the parent is the input stream
-            let mut parent_name: Option<String> = None; 
+            stack.push(TreeComponent { parent_name: None, component: root.to_owned() }); 
 
             while !stack.is_empty() {
                 let current_tree_comp = stack.pop().unwrap();
@@ -89,7 +86,7 @@ impl Generator {
                 // Generate TIL for the current component
                 if let Some(ref component) = current_component.get_if_generatable() {
                     // Register the component as an entity
-                    let til_comp = self.gen_tools.entity_manager.register(component, &self.gen_params, &mut self.gen_tools.type_manager, 0);
+                    let til_comp = self.gen_tools.entity_manager.register(component, &mut self.gen_tools.type_manager, 0);
 
                     // Add the component definition to the top component
                     let inst_name = implementation.add_instance(til_comp.get_name().to_string());
