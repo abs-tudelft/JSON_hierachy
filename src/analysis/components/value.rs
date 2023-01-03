@@ -15,13 +15,15 @@ impl Generatable for Value {
     fn get_streaming_interface(&self, gen_params: &GeneratorParams) -> TilStreamingInterface {
         let mut interface = TilStreamingInterface::new();
         interface.add_generic(Generic::new("EPC", GenericType::Positive(gen_params.epc)));
-        let dim_name = "NESTING_LEVEL";
-        interface.add_generic(Generic::new(dim_name, GenericType::Dimensionality(self.outer_nested)));
+        let dim_name = "DIM";
+        let dim = self.outer_nested + 1;
+        interface.add_generic(Generic::new(dim_name, GenericType::Dimensionality(dim)));
+        interface.add_generic(Generic::new("NESTING_LEVEL", GenericType::Positive(self.outer_nested)));
 
         // Input type
         interface.add_stream("input", TilStreamDirection::Input,
             StreamType::Json( 
-                StreamDim::new(Some(dim_name.to_string()), self.outer_nested, 1)
+                StreamDim::new(Some(dim_name.to_string()), dim, 0)
             )
         );
 
@@ -30,7 +32,7 @@ impl Generatable for Value {
                 // Output type
                 interface.add_stream("output", TilStreamDirection::Output,
                     StreamType::Json( 
-                        StreamDim::new(Some(dim_name.to_string()),  self.outer_nested, 1)
+                        StreamDim::new(Some(dim_name.to_string()),  dim, 0)
                     )
                 );
 
@@ -42,7 +44,7 @@ impl Generatable for Value {
                 // Output type
                 interface.add_stream("output", TilStreamDirection::Output,
                 StreamType::Int( 
-                        StreamDim::new(Some(dim_name.to_string()),  self.outer_nested, 0)
+                        StreamDim::new(Some(dim_name.to_string()),  dim, -1)
                     )
                 );
 
@@ -52,7 +54,7 @@ impl Generatable for Value {
                 // Output type
                 interface.add_stream("output", TilStreamDirection::Output,
                 StreamType::Bool( 
-                        StreamDim::new(Some(dim_name.to_string()),  self.outer_nested, 0)
+                        StreamDim::new(Some(dim_name.to_string()),  dim, -1)
                     )
                 );
 

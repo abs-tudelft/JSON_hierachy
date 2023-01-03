@@ -17,22 +17,24 @@ impl Generatable for Array {
         let mut interface = TilStreamingInterface::new();
 
         interface.add_generic(Generic::new("EPC", GenericType::Positive(gen_params.epc)));
-        let dim_name = "OUTER_NESTING_LEVEL";
-        interface.add_generic(Generic::new(dim_name, GenericType::Dimensionality(self.outer_nested)));
+        let dim_name = "DIM";
+        let dim = self.outer_nested + 1;
+        interface.add_generic(Generic::new(dim_name, GenericType::Dimensionality(dim)));
+        interface.add_generic(Generic::new("OUTER_NESTING_LEVEL", GenericType::Natural(self.outer_nested)));
         interface.add_generic(Generic::new("INNER_NESTING_LEVEL", GenericType::Natural(self.inner_nested)));
         
 
         // Input type
         interface.add_stream("input", TilStreamDirection::Input,
             StreamType::Json( 
-                StreamDim::new(Some(dim_name.to_string()), self.outer_nested, 1)
+                StreamDim::new(Some(dim_name.to_string()), dim, 0)
             )
         );
 
         // Output type
         interface.add_stream("output", TilStreamDirection::Output,
             StreamType::Json( 
-                StreamDim::new(Some(dim_name.to_string()), self.outer_nested, 2)
+                StreamDim::new(Some(dim_name.to_string()), dim, 1)
             )
         );
 

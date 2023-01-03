@@ -17,13 +17,15 @@ impl Generatable for Key {
         let mut interface = TilStreamingInterface::new();
 
         interface.add_generic(Generic::new("EPC", GenericType::Positive(gen_params.epc)));
-        let dim_name = "OUTER_NESTING_LEVEL";
-        interface.add_generic(Generic::new(dim_name, GenericType::Dimensionality(self.outer_nested)));
+        let dim_name = "DIM";
+        let dim = self.outer_nested + 1;
+        interface.add_generic(Generic::new(dim_name, GenericType::Dimensionality(dim)));
+        interface.add_generic(Generic::new("OUTER_NESTING_LEVEL", GenericType::Positive(self.outer_nested)));
 
         // Input type
         interface.add_stream("input", TilStreamDirection::Input, 
             StreamType::Record( 
-                StreamDim::new(Some(dim_name.to_string()), self.outer_nested, 1)
+                StreamDim::new(Some(dim_name.to_string()), dim, 0)
             )
         );
 
@@ -34,7 +36,7 @@ impl Generatable for Key {
         // Output type
         interface.add_stream("output", TilStreamDirection::Output,
             StreamType::Json( 
-                StreamDim::new(Some(dim_name.to_string()), self.outer_nested, 1)
+                StreamDim::new(Some(dim_name.to_string()), dim, 0)
             )
         );        
 
