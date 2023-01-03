@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::{Display, Formatter}};
+use std::{fmt::{Display, Formatter}, cmp::Ordering};
 
 use indoc::formatdoc;
 
@@ -324,15 +324,15 @@ impl Display for StreamDim {
         dim.push('<');
 
         if let Some(name) = &self.name {
-            dim.push_str(&format!("{}", name));
+            dim.push_str(&name.to_string());
             has_name = true;
         }
 
         if has_name {
-            if self.additive > 0 {
-                dim.push_str(&format!("+{}", self.additive));
-            } else if self.additive < 0 {
-                dim.push_str(&format!("{}", self.additive));
+            match self.additive.cmp(&0) {
+                Ordering::Greater => dim.push_str(&format!("+{}", self.additive)),
+                Ordering::Less => dim.push_str(&format!("{}", self.additive)),
+                Ordering::Equal => {}
             }
         } else {
             dim.push_str(&format!("{}", self.get_true_value()));

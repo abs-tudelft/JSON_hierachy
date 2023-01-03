@@ -72,7 +72,7 @@ impl StreamType {
 
     pub fn to_instance_string(&self) -> String {
         let mut inst_str = String::new();
-        inst_str.push_str(&self.get_name().to_string());
+        inst_str.push_str(self.get_name());
 
         inst_str.push_str(
             &match self {
@@ -86,17 +86,6 @@ impl StreamType {
         );
 
         inst_str
-    }
-
-    pub fn get_stream_dim(&self) -> Option<StreamDim> {
-        match self {
-            StreamType::Json(stream_dim) => Some(stream_dim.clone()),
-            StreamType::Int(stream_dim) => Some(stream_dim.clone()),
-            StreamType::Bool(stream_dim) => Some(stream_dim.clone()),
-            StreamType::Record(stream_dim) => Some(stream_dim.clone()),
-            StreamType::MatcherMatch => None,
-            StreamType::MatcherStr => None,
-        }
     }
 }
 
