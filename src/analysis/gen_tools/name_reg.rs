@@ -22,13 +22,13 @@ impl NameReg {
         if self.name_map.contains_key(&pref_name) {
             // Get current count for name
             let count = self.name_map.get_mut(&pref_name).unwrap();
-            registered_name.push_str(count.to_string().as_str());
+            registered_name.push_str(&format!("{:#02}", count));
 
             // Increment count
             *count += 1;
         } else {
             // If not, insert it with a value of 1
-            registered_name.push_str(&String::from("0"));
+            registered_name.push_str(&String::from("00"));
             self.name_map.insert(String::from(&pref_name), 1);
         }
 

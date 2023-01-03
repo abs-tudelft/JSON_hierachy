@@ -48,15 +48,25 @@ impl TilComponent {
 impl Display for TilComponent {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut comp_def = String::new();
-        let mut generic_defs = String::new();
+        let mut generics = String::new();
         let mut stream_defs = String::new();
 
         if !self.get_streams().get_generics().is_empty() {
+            let mut generic_defs = String::new();
+
             for generic in self.get_streams().get_generics() {
                 generic_defs.push_str(
                     &format!("{},\n", generic)
                 );
             }
+
+            generics = formatdoc!(
+                "
+                <
+                {}
+                >",
+                generic_defs
+            );
         }
 
         for stream in self.get_streams().get_streams() {
@@ -68,13 +78,11 @@ impl Display for TilComponent {
         comp_def.push_str(
             &formatdoc!(
                 "
-                streamlet {} = <
-                    {}
-                > (
+                streamlet {} = {} (
                     {}
                 )",
                 self.get_name(),
-                generic_defs,
+                generics,
                 stream_defs
             )
         );
