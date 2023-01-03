@@ -1,3 +1,7 @@
+use std::{collections::HashMap, fmt::{Display, Formatter}};
+
+use indoc::formatdoc;
+
 use super::gen_tools::type_manager::StreamType;
 
 #[derive(Clone)]
@@ -38,6 +42,44 @@ impl TilComponent {
 
     pub fn get_implementation(&self) -> &Option<TilImplementationType> {
         &self.implementation
+    }
+}
+
+impl Display for TilComponent {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut comp_def = String::new();
+        let mut generic_defs = String::new();
+        let mut stream_defs = String::new();
+
+        if !self.get_streams().get_generics().is_empty() {
+            for generic in self.get_streams().get_generics() {
+                generic_defs.push_str(
+                    &format!("{},\n", generic)
+                );
+            }
+        }
+
+        for stream in self.get_streams().get_streams() {
+            stream_defs.push_str(
+                &format!("{},\n", stream)
+            );
+        }
+
+        comp_def.push_str(
+            &formatdoc!(
+                "
+                streamlet {} = <
+                    {}
+                > (
+                    {}
+                )",
+                self.get_name(),
+                generic_defs,
+                stream_defs
+            )
+        );
+
+        write!(f, "{}", comp_def)
     }
 }
 
@@ -149,48 +191,63 @@ impl TilSignal {
 
 #[derive(Clone)]
 pub struct TilStreamingInterface {
-    input: Vec<TilStream>,
-    output: Vec<TilStream>,
+    generics: Vec<Generic>,
+    streams: Vec<TilStream>,
 }
 
 impl TilStreamingInterface {
     pub fn new() -> TilStreamingInterface {
         TilStreamingInterface {
-            input: Vec::new(),
-            output: Vec::new(),
+            generics: Vec::new(),
+            streams: Vec::new(),
         }
     }
 
-    pub fn add_input_stream(&mut self, stream_name: &str, stream_type: StreamType) {
-        self.input.push(
+    pub fn add_stream(&mut self, stream_name: &str, direction: TilStreamDirection, stream_type: StreamType) {
+        self.streams.push(
             TilStream {
                 name: String::from(stream_name),
-                stream_type
+                direction,
+                stream_type,
             }
         );
     }
 
-    pub fn add_output_stream(&mut self, stream_name: &str, stream_type: StreamType) {
-        self.output.push(
-            TilStream {
-                name: String::from(stream_name),
-                stream_type
+    pub fn add_generic(&mut self, generic: Generic) {
+        self.generics.push(generic);
+    }
+
+    pub fn get_generics(&self) -> &Vec<Generic> {
+        &self.generics
+    }
+
+    pub fn get_streams(&self) -> &Vec<TilStream> {
+        &self.streams
+    }
+
+    pub fn get_input_streams(&self) -> Vec<&TilStream> {
+        self.streams.iter().filter(|stream| {
+            match stream.direction {
+                TilStreamDirection::Input => true,
+                TilStreamDirection::Output => false,
             }
-        );
+        }).collect()
     }
 
-    pub fn get_input_streams(&self) -> &Vec<TilStream> {
-        &self.input
-    }
-
-    pub fn get_output_streams(&self) -> &Vec<TilStream> {
-        &self.output
+    pub fn get_output_streams(&self) -> Vec<&TilStream> {
+        self.streams.iter().filter(|stream| {
+            match stream.direction {
+                TilStreamDirection::Input => false,
+                TilStreamDirection::Output => true,
+            }
+        }).collect()
     }
 }
 
 #[derive(Clone)]
 pub struct TilStream {
     name: String,
+    direction: TilStreamDirection,
     stream_type: StreamType,
 }
 
@@ -201,5 +258,136 @@ impl TilStream {
 
     pub fn get_type(&self) -> &StreamType {
         &self.stream_type
+    }
+}
+
+impl Display for TilStream {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {} {}", self.get_name(), self.direction, self.get_type().to_instance_string())
+    }
+}
+
+#[derive(Clone)]
+pub enum TilStreamDirection {
+    Input,
+    Output,
+}
+
+impl Display for TilStreamDirection {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TilStreamDirection::Input => write!(f, "in"),
+            TilStreamDirection::Output => write!(f, "out"),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct StreamDim {
+    name: Option<String>,
+    additive: isize,
+    value: usize
+}
+
+impl StreamDim {
+    pub fn new(name: Option<String>, value: usize, additive: isize) -> StreamDim {
+        StreamDim {
+            name,
+            additive,
+            value,
+        }
+    }
+
+    pub fn get_name(&self) -> &Option<String> {
+        &self.name
+    }
+
+    pub fn get_additive(&self) -> isize {
+        self.additive
+    }
+
+    pub fn get_value(&self) -> usize {
+        self.value
+    }
+
+    pub fn get_true_value(&self) -> usize {
+        (self.value as isize + self.additive) as usize
+    }
+}
+
+impl Display for StreamDim {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut dim = String::new();
+
+        let mut has_name = false;
+
+        dim.push('<');
+
+        if let Some(name) = &self.name {
+            dim.push_str(&format!("{}", name));
+            has_name = true;
+        }
+
+        if has_name {
+            if self.additive > 0 {
+                dim.push_str(&format!("+{}", self.additive));
+            } else if self.additive < 0 {
+                dim.push_str(&format!("{}", self.additive));
+            }
+        } else {
+            dim.push_str(&format!("{}", self.get_true_value()));
+        }        
+
+        dim.push('>');
+
+        write!(f, "{}", dim)
+    }
+}
+
+#[derive(Clone)]
+pub struct Generic {
+    name: String,
+    generic_type: GenericType,
+}
+
+impl Generic {
+    pub fn new(name: &str, generic_type: GenericType) -> Generic {
+        Generic {
+            name: String::from(name),
+            generic_type,
+        }
+    }
+
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn get_type(&self) -> &GenericType {
+        &self.generic_type
+    }
+}
+
+impl Display for Generic {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}", self.get_name(), self.get_type())
+    }
+}
+
+#[derive(Clone)]
+pub enum GenericType {
+    Integer(isize),
+    Natural(usize),
+    Positive(usize),
+    Dimensionality(usize),
+}
+
+impl Display for GenericType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GenericType::Integer(value) => write!(f, "integer = {}", value),
+            GenericType::Natural(value) => write!(f, "natural = {}", value),
+            GenericType::Positive(value) => write!(f, "positive = {}", value),
+            GenericType::Dimensionality(value) => write!(f, "dimensionality = {}", value),
+        }
     }
 }

@@ -1,4 +1,4 @@
-use crate::analysis::{gen_tools::{type_manager::StreamType}, types::{TilStreamingInterface, TilSignal}};
+use crate::analysis::{gen_tools::{type_manager::StreamType}, types::{TilStreamingInterface, TilSignal, Generic, GenericType, StreamDim, TilStreamDirection}, GeneratorParams};
 
 use super::{JsonComponent, JsonType, Value, Generatable, JsonComponentValue};
 
@@ -12,34 +12,49 @@ impl Value {
 }
 
 impl Generatable for Value {
-    fn get_streaming_interface(&self) -> TilStreamingInterface {
+    fn get_streaming_interface(&self, gen_params: &GeneratorParams) -> TilStreamingInterface {
         let mut interface = TilStreamingInterface::new();
+        interface.add_generic(Generic::new("EPC", GenericType::Positive(gen_params.epc)));
+        let dim_name = "NESTING_LEVEL";
+        interface.add_generic(Generic::new(dim_name, GenericType::Dimensionality(self.outer_nested)));
+
+        // Input type
+        interface.add_stream("input", TilStreamDirection::Input,
+            StreamType::Json( 
+                StreamDim::new(Some(dim_name.to_string()), self.outer_nested, 1)
+            )
+        );
 
         match self.data_type {
             JsonType::String => {
-                // Input type
-                interface.add_input_stream("input", StreamType::Json);
-
                 // Output type
-                interface.add_output_stream("output", StreamType::Json);
+                interface.add_stream("output", TilStreamDirection::Output,
+                    StreamType::Json( 
+                        StreamDim::new(Some(dim_name.to_string()),  self.outer_nested, 1)
+                    )
+                );
 
                 interface
             },
             JsonType::Integer => {
-                // Input type
-                interface.add_input_stream("input", StreamType::Json);
+                interface.add_generic(Generic::new("BITWIDTH", GenericType::Positive(gen_params.int_width)));
 
                 // Output type
-                interface.add_output_stream("output", StreamType::Int);
+                interface.add_stream("output", TilStreamDirection::Output,
+                StreamType::Int( 
+                        StreamDim::new(Some(dim_name.to_string()),  self.outer_nested, 0)
+                    )
+                );
 
                 interface
             },
             JsonType::Boolean => {
-                // Input type
-                interface.add_input_stream("input", StreamType::Json);
-
                 // Output type
-                interface.add_output_stream("output", StreamType::Bool);
+                interface.add_stream("output", TilStreamDirection::Output,
+                StreamType::Bool( 
+                        StreamDim::new(Some(dim_name.to_string()),  self.outer_nested, 0)
+                    )
+                );
 
                 interface
             }
@@ -48,9 +63,9 @@ impl Generatable for Value {
 
     fn get_streaming_types(&self) -> Vec<StreamType> {
         match self.data_type {
-            JsonType::String => vec![StreamType::Json],
-            JsonType::Integer => vec![StreamType::Json, StreamType::Int],
-            JsonType::Boolean => vec![StreamType::Json, StreamType::Bool],
+            JsonType::String => vec![StreamType::Json(StreamDim::new(None, 0, 0))],
+            JsonType::Integer => vec![StreamType::Json(StreamDim::new(None, 0, 0)), StreamType::Int(StreamDim::new(None, 0, 0))],
+            JsonType::Boolean => vec![StreamType::Json(StreamDim::new(None, 0, 0)), StreamType::Bool(StreamDim::new(None, 0, 0))],
         }
     }
 

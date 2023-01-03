@@ -1,4 +1,4 @@
-use crate::analysis::{types::{TilStreamingInterface, TilSignal}, gen_tools::{type_manager::StreamType}};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal, Generic, GenericType, TilStreamDirection}, gen_tools::{type_manager::StreamType}, GeneratorParams};
 
 use super::{JsonComponent, Matcher, Generatable, JsonComponentValue};
 
@@ -16,14 +16,16 @@ impl Matcher {
 }
 
 impl Generatable for Matcher {
-    fn get_streaming_interface(&self) -> TilStreamingInterface {
+    fn get_streaming_interface(&self, gen_params: &GeneratorParams) -> TilStreamingInterface {
         let mut interface = TilStreamingInterface::new();
 
+        interface.add_generic(Generic::new("BPC", GenericType::Positive(gen_params.epc)));
+
         // Input type
-        interface.add_input_stream("input", StreamType::MatcherStr);
+        interface.add_stream("input", TilStreamDirection::Input, StreamType::MatcherStr);
 
         // Output type
-        interface.add_output_stream("output", StreamType::MatcherMatch);
+        interface.add_stream("output", TilStreamDirection::Output, StreamType::MatcherMatch);
 
         interface
     }

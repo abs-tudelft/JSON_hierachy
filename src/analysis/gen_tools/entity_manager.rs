@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use indoc::formatdoc;
 
-use crate::analysis::{types::{TilComponent, TilImplementationType}, components::Generatable};
+use crate::analysis::{types::{TilComponent, TilImplementationType}, components::Generatable, GeneratorParams};
 
 use super::{EntityManager, NameReg, TypeManager};
 
@@ -14,9 +14,10 @@ impl EntityManager {
         }
     }
 
-    pub fn register(&mut self, json_component: &&dyn Generatable, type_manager: &mut TypeManager, weight: usize) -> TilComponent {
+    pub fn register(&mut self, json_component: &&dyn Generatable, gen_params: &GeneratorParams, type_manager: &mut TypeManager, weight: usize) -> TilComponent {
         let name = json_component.get_preffered_name();
         let nesting_level = json_component.get_nesting_level();
+
 
         // Get a name for the component
         let registered_name = self.name_reg.register(&name, nesting_level);
@@ -25,7 +26,7 @@ impl EntityManager {
         let mut entity = TilComponent::new(&registered_name);
 
         // Generate streaming interface
-        let stream_interface = json_component.get_streaming_interface();
+        let stream_interface = json_component.get_streaming_interface(gen_params);
 
         // Add interface to component
         entity.set_streaming_interface(stream_interface);
@@ -62,31 +63,8 @@ impl EntityManager {
         let mut stream_defs = String::new();
 
         for list in &self.entity_list {
-            for (name, entity) in list {
-                let mut local_stream_defs = String::new();
-
-                for stream in entity.get_streams().get_input_streams() {
-                    local_stream_defs.push_str(
-                        &format!("{}: in {},\n", stream.get_name(), stream.get_type().get_name())
-                    );
-                }
-
-                for stream in entity.get_streams().get_output_streams() {
-                    local_stream_defs.push_str(
-                        &format!("{}: out {},\n", stream.get_name(), stream.get_type().get_name())
-                    );
-                }
-
-                stream_defs.push_str(
-                    &formatdoc!(
-                        "
-                        streamlet {} = (
-                            {}
-                        )",
-                        name,
-                        local_stream_defs
-                    )
-                );
+            for entity in list.values() {
+                stream_defs.push_str(&entity.to_string());
 
                 // Check if there is an implementation
                 if let Some(implementation) = entity.get_implementation() {

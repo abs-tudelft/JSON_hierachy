@@ -1,4 +1,4 @@
-use super::{Generator, components::{JsonComponent, JsonComponentValue}, til, types::{TilComponent, TilInlineImplementation, TilImplementationType, TilSignal}, gen_tools::type_manager::StreamType};
+use super::{Generator, components::{JsonComponent, JsonComponentValue}, til, types::{TilComponent, TilInlineImplementation, TilImplementationType, TilSignal, StreamDim, TilStreamDirection}, gen_tools::type_manager::StreamType};
 
 /**********************************************************************************
  * Set of functions to generate VHDL code around the components                   *
@@ -50,20 +50,10 @@ impl Generator {
     fn analyze_from_top_component(&mut self) -> TilComponent {
         let mut top_component = TilComponent::new("top");
 
-        // let top_input_type = TilStreamType::new(
-        //     "TopInStream",
-        //     TilStreamParam::new(
-        //         self.gen_params.bit_width,
-        //         self.gen_params.epc,
-        //         2,
-        //         Synchronicity::Sync,
-        //         8
-        //     )
-        // );
-
         // Create input stream for the top component
-        self.gen_tools.type_manager.register(StreamType::Json);
-        top_component.get_streams_mut().add_input_stream("input", StreamType::Json);
+        let top_input_type = StreamType::Json(StreamDim::new(None, 2, 0));
+        self.gen_tools.type_manager.register(top_input_type.clone());
+        top_component.get_streams_mut().add_stream("input", TilStreamDirection::Input, top_input_type);
         
 
         // Check if there is a root component
@@ -86,7 +76,7 @@ impl Generator {
                 // Generate TIL for the current component
                 if let Some(ref component) = current_component.get_if_generatable() {
                     // Register the component as an entity
-                    let til_comp = self.gen_tools.entity_manager.register(component, &mut self.gen_tools.type_manager, 0);
+                    let til_comp = self.gen_tools.entity_manager.register(component, &self.gen_params, &mut self.gen_tools.type_manager, 0);
 
                     // Add the component definition to the top component
                     let inst_name = implementation.add_instance(til_comp.get_name().to_string());
@@ -113,7 +103,25 @@ impl Generator {
                         // If the current component is a leaf, add the output stream to the top component
                         for stream in til_comp.get_streams().get_output_streams() {
                             let output_name = format!("output_{}", inst_name);
-                            top_component.get_streams_mut().add_output_stream(&output_name, stream.get_type().clone());
+
+                            // Copy the stream type without the generic name
+                            let stream_type = match stream.get_type() {
+                                StreamType::Json(stream_dim) => {
+                                    StreamType::Json(StreamDim::new(None, stream_dim.get_value(), stream_dim.get_additive()))
+                                },
+                                StreamType::Bool(stream_dim) => {
+                                    StreamType::Bool(StreamDim::new(None, stream_dim.get_value(), stream_dim.get_additive()))
+                                },
+                                StreamType::Int(stream_dim) => {
+                                    StreamType::Int(StreamDim::new(None, stream_dim.get_value(), stream_dim.get_additive()))
+                                },
+                                StreamType::Record(stream_dim) => {
+                                    StreamType::Record(StreamDim::new(None, stream_dim.get_value(), stream_dim.get_additive()))
+                                },
+                                _ => stream.get_type().clone()
+                            };
+
+                            top_component.get_streams_mut().add_stream(&output_name, TilStreamDirection::Output, stream_type);
                             implementation.add_signal(
                                 TilSignal::new(
                                     &Some(inst_name.clone()), 

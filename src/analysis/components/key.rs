@@ -1,4 +1,4 @@
-use crate::analysis::{gen_tools::{type_manager::StreamType}, types::{TilStreamingInterface, TilSignal}};
+use crate::analysis::{gen_tools::{type_manager::StreamType}, types::{TilStreamingInterface, TilSignal, Generic, GenericType, StreamDim, TilStreamDirection}, GeneratorParams};
 
 use super::{Key, Generatable, JsonComponent, Matcher, JsonComponentValue};
 
@@ -13,24 +13,36 @@ impl Key {
 }
 
 impl Generatable for Key {
-    fn get_streaming_interface(&self) -> TilStreamingInterface {
+    fn get_streaming_interface(&self, gen_params: &GeneratorParams) -> TilStreamingInterface {
         let mut interface = TilStreamingInterface::new();
 
+        interface.add_generic(Generic::new("EPC", GenericType::Positive(gen_params.epc)));
+        let dim_name = "OUTER_NESTING_LEVEL";
+        interface.add_generic(Generic::new(dim_name, GenericType::Dimensionality(self.outer_nested)));
+
         // Input type
-        interface.add_input_stream("input", StreamType::Record);
+        interface.add_stream("input", TilStreamDirection::Input, 
+            StreamType::Record( 
+                StreamDim::new(Some(dim_name.to_string()), self.outer_nested, 1)
+            )
+        );
 
         // Matcher type
-        interface.add_output_stream("matcher_str", StreamType::MatcherStr);
-        interface.add_input_stream("matcher_match", StreamType::MatcherMatch);
+        interface.add_stream("matcher_str", TilStreamDirection::Output, StreamType::MatcherStr);
+        interface.add_stream("matcher_match", TilStreamDirection::Input, StreamType::MatcherMatch);
 
         // Output type
-        interface.add_output_stream("output", StreamType::Json);        
+        interface.add_stream("output", TilStreamDirection::Output,
+            StreamType::Json( 
+                StreamDim::new(Some(dim_name.to_string()), self.outer_nested, 1)
+            )
+        );        
 
         interface
     }
 
     fn get_streaming_types(&self) -> Vec<StreamType> {
-        vec![StreamType::Record, StreamType::MatcherStr, StreamType::MatcherMatch, StreamType::Json]
+        vec![StreamType::Record(StreamDim::new(None, 0, 0)), StreamType::MatcherStr, StreamType::MatcherMatch, StreamType::Json(StreamDim::new(None, 0, 0))]
     }
 
     fn get_preffered_name(&self) -> String {

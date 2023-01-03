@@ -33,7 +33,6 @@ struct NameReg {
     name_map: HashMap<String, u32>,
 }
 
-use enum_map::EnumMap;
 pub struct TypeManager {
-    type_list: EnumMap<StreamType, bool>,
+    type_list: Vec<StreamType>,
 }

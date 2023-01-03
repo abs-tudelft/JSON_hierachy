@@ -1,4 +1,4 @@
-use crate::analysis::{types::{TilStreamingInterface, TilSignal}, gen_tools::{type_manager::StreamType}};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal, Generic, GenericType, StreamDim, TilStreamDirection}, GeneratorParams, gen_tools::type_manager::StreamType};
 
 use super::{Array, JsonComponent, Generatable, JsonComponentValue};
 
@@ -13,20 +13,34 @@ impl Array {
 }
 
 impl Generatable for Array {
-    fn get_streaming_interface(&self) -> TilStreamingInterface {       
+    fn get_streaming_interface(&self, gen_params: &GeneratorParams) -> TilStreamingInterface {       
         let mut interface = TilStreamingInterface::new();
 
+        interface.add_generic(Generic::new("EPC", GenericType::Positive(gen_params.epc)));
+        let dim_name = "OUTER_NESTING_LEVEL";
+        interface.add_generic(Generic::new(dim_name, GenericType::Dimensionality(self.outer_nested)));
+        interface.add_generic(Generic::new("INNER_NESTING_LEVEL", GenericType::Natural(self.inner_nested)));
+        
+
         // Input type
-        interface.add_input_stream("input", StreamType::Json);
+        interface.add_stream("input", TilStreamDirection::Input,
+            StreamType::Json( 
+                StreamDim::new(Some(dim_name.to_string()), self.outer_nested, 1)
+            )
+        );
 
         // Output type
-        interface.add_output_stream("output", StreamType::Json);
+        interface.add_stream("output", TilStreamDirection::Output,
+            StreamType::Json( 
+                StreamDim::new(Some(dim_name.to_string()), self.outer_nested, 2)
+            )
+        );
 
         interface
     }
 
     fn get_streaming_types(&self) -> Vec<StreamType> {
-        vec![StreamType::Json]
+        vec![StreamType::Json(StreamDim::new(None, 0, 0))]
     }
 
     fn get_preffered_name(&self) -> String {
