@@ -1,10 +1,9 @@
-use self::{components::JsonComponent, gen_tools::GenTools};
+use self::{components::JsonComponent, analyzer::Analyzer};
 
 mod components;
 mod visualization;
 pub mod generator;
 pub mod analyzer;
-pub mod gen_tools;
 pub mod types;
 // mod vhdl;
 mod til;
@@ -12,10 +11,11 @@ mod til;
 
 pub struct Generator {
     root: Option<JsonComponent>,
-    gen_tools: GenTools,
+    analyzer: Analyzer,
     gen_params: GeneratorParams,
 }
 
+#[derive(Default, Clone)]
 pub struct GeneratorParams {
     epc: usize,
     bit_width: usize,

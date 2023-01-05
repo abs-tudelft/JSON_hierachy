@@ -1,10 +1,10 @@
-use super::{visualization, Generator, GenTools, GeneratorParams, analyzer};
+use super::{visualization, Generator, GeneratorParams, analyzer::Analyzer};
 
 impl Generator {
     pub fn new(epc: usize, bit_width: usize, int_width: usize) -> Generator {
         Generator {
             root: None,
-            gen_tools: GenTools::new(),
+            analyzer: Analyzer::new(),
             gen_params: GeneratorParams {
                 epc,
                 bit_width,
@@ -21,7 +21,7 @@ impl Generator {
         // In case of error, return the error
         .map_err(GeneratorError::JsonError)?; 
 
-        self.root = analyzer::analyze(&parsed);
+        self.root = self.analyzer.analyze(&parsed, self.gen_params.clone());
 
         Ok(())
     }

@@ -1,8 +1,10 @@
-use std::{fmt::{Display, Formatter}, cmp::Ordering};
+use std::fmt::{Display, Formatter};
 
 use indoc::formatdoc;
 
-use super::gen_tools::type_manager::StreamType;
+use self::stream_types::StreamTypeDecl;
+
+pub mod stream_types;
 
 #[derive(Clone)]
 pub struct TilComponent {
@@ -15,7 +17,7 @@ impl TilComponent {
     pub fn new(name: &str) -> TilComponent {
         TilComponent {
             name: String::from(name),
-            streams: TilStreamingInterface::new(),
+            streams: TilStreamingInterface::default(),
             implementation: None,
         }
     }
@@ -97,20 +99,13 @@ pub enum TilImplementationType {
     Inline(TilInlineImplementation),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct TilInlineImplementation {
     instances: Vec<TilInstance>,
     signals: Vec<TilSignal>,
 }
 
 impl TilInlineImplementation {
-    pub fn new() -> TilInlineImplementation {
-        TilInlineImplementation {
-            instances: Vec::new(),
-            signals: Vec::new(),
-        }
-    }
-
     pub fn add_instance(&mut self, component_name: String) -> String{
         let instance_name = format!("{}_inst", component_name);
         self.instances.push(TilInstance::new(&component_name, &instance_name));
@@ -162,11 +157,11 @@ pub struct TilSignal {
 }
 
 impl TilSignal {
-    pub fn new(source_inst_name: &Option<String>, source_stream_name: &str, dest_inst_name: &Option<String>, dest_stream_name: &str) -> TilSignal {
+    pub fn new(source_inst_name: Option<String>, source_stream_name: &str, dest_inst_name: Option<String>, dest_stream_name: &str) -> TilSignal {
         TilSignal {
-            source_inst_name: source_inst_name.to_owned(),
+            source_inst_name,
             source_stream_name: String::from(source_stream_name),
-            dest_inst_name: dest_inst_name.to_owned(),
+            dest_inst_name,
             dest_stream_name: String::from(dest_stream_name),
         }
     }
@@ -197,21 +192,14 @@ impl TilSignal {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct TilStreamingInterface {
     generics: Vec<Generic>,
     streams: Vec<TilStream>,
 }
 
 impl TilStreamingInterface {
-    pub fn new() -> TilStreamingInterface {
-        TilStreamingInterface {
-            generics: Vec::new(),
-            streams: Vec::new(),
-        }
-    }
-
-    pub fn add_stream(&mut self, stream_name: &str, direction: TilStreamDirection, stream_type: StreamType) {
+    pub fn add_stream(&mut self, stream_name: &str, direction: TilStreamDirection, stream_type: StreamTypeDecl) {
         self.streams.push(
             TilStream {
                 name: String::from(stream_name),
@@ -256,7 +244,7 @@ impl TilStreamingInterface {
 pub struct TilStream {
     name: String,
     direction: TilStreamDirection,
-    stream_type: StreamType,
+    stream_type: StreamTypeDecl,
 }
 
 impl TilStream {
@@ -264,18 +252,18 @@ impl TilStream {
         &self.name
     }
 
-    pub fn get_type(&self) -> &StreamType {
+    pub fn get_type(&self) -> &StreamTypeDecl {
         &self.stream_type
     }
 }
 
 impl Display for TilStream {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}: {} {}", self.get_name(), self.direction, self.get_type().to_instance_string())
+        write!(f, "{}: {} {}", self.get_name(), self.direction, self.get_type())
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum TilStreamDirection {
     Input,
     Output,
@@ -287,68 +275,6 @@ impl Display for TilStreamDirection {
             TilStreamDirection::Input => write!(f, "in"),
             TilStreamDirection::Output => write!(f, "out"),
         }
-    }
-}
-
-#[derive(Clone)]
-pub struct StreamDim {
-    name: Option<String>,
-    additive: isize,
-    value: usize
-}
-
-impl StreamDim {
-    pub fn new(name: Option<String>, value: usize, additive: isize) -> StreamDim {
-        StreamDim {
-            name,
-            additive,
-            value,
-        }
-    }
-
-    pub fn get_name(&self) -> &Option<String> {
-        &self.name
-    }
-
-    pub fn get_additive(&self) -> isize {
-        self.additive
-    }
-
-    pub fn get_value(&self) -> usize {
-        self.value
-    }
-
-    pub fn get_true_value(&self) -> usize {
-        (self.value as isize + self.additive) as usize
-    }
-}
-
-impl Display for StreamDim {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut dim = String::new();
-
-        let mut has_name = false;
-
-        dim.push('<');
-
-        if let Some(name) = &self.name {
-            dim.push_str(&name.to_string());
-            has_name = true;
-        }
-
-        if has_name {
-            match self.additive.cmp(&0) {
-                Ordering::Greater => dim.push_str(&format!("+{}", self.additive)),
-                Ordering::Less => dim.push_str(&format!("{}", self.additive)),
-                Ordering::Equal => {}
-            }
-        } else {
-            dim.push_str(&format!("{}", self.get_true_value()));
-        }        
-
-        dim.push('>');
-
-        write!(f, "{}", dim)
     }
 }
 
@@ -381,7 +307,7 @@ impl Display for Generic {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum GenericType {
     Integer(isize),
     Natural(usize),

@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use super::NameReg;
+pub struct NameReg {
+    name_map: HashMap<String, usize>,
+}
 
 impl NameReg {
     pub fn new() -> NameReg {

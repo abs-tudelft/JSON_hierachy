@@ -1,10 +1,12 @@
-use crate::analysis::{types::{TilStreamingInterface, TilSignal, Generic, GenericType, TilStreamDirection}, gen_tools::{type_manager::StreamType}, GeneratorParams};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal, Generic, GenericType, TilStreamDirection, stream_types::StreamTypeDecl}, GeneratorParams, analyzer::type_manager::StreamType};
 
 use super::{JsonComponent, Matcher, Generatable, JsonComponentValue};
 
 impl Matcher {
-    pub fn new(matcher: String, outer_nested: usize) -> Matcher {
+    pub fn new(name: &str, holder_name: &str, matcher: String, outer_nested: usize) -> Matcher {
         Matcher {
+            name: name.to_string(),
+            holder_name: holder_name.to_string(),
             matcher,
             outer_nested
         }
@@ -17,15 +19,25 @@ impl Matcher {
 
 impl Generatable for Matcher {
     fn get_streaming_interface(&self, gen_params: &GeneratorParams) -> TilStreamingInterface {
-        let mut interface = TilStreamingInterface::new();
+        let mut interface = TilStreamingInterface::default();
 
         interface.add_generic(Generic::new("BPC", GenericType::Positive(gen_params.epc)));
 
         // Input type
-        interface.add_stream("input", TilStreamDirection::Input, StreamType::MatcherStr);
+        interface.add_stream("input", TilStreamDirection::Input, 
+            StreamTypeDecl::new(
+                StreamType::MatcherStr,
+                None
+            )
+        );
 
         // Output type
-        interface.add_stream("output", TilStreamDirection::Output, StreamType::MatcherMatch);
+        interface.add_stream("output", TilStreamDirection::Output,  
+            StreamTypeDecl::new(
+                StreamType::MatcherMatch,
+                None
+            )
+        );
 
         interface
     }
@@ -34,23 +46,20 @@ impl Generatable for Matcher {
         vec![StreamType::MatcherStr, StreamType::MatcherMatch]
     }
 
-    fn get_preffered_name(&self) -> String {
-        format!("{}_matcher", self.matcher)
-    }
-
     fn get_nesting_level(&self) -> usize {
         self.outer_nested
     }
 
-    fn get_signals(&self, instance_name: &Option<String>, _instance_stream_name: &str, parent_name: &Option<String>, _parent_stream_namee: &str) -> Vec<TilSignal> {
-        vec![
-            TilSignal::new(parent_name, "matcher_str", instance_name, "input"),
-            TilSignal::new(instance_name, "output", parent_name, "matcher_match"),
-        ]     
+    fn get_outgoing_signals(&self) -> Vec<TilSignal> {
+        vec![TilSignal::new(Some(self.name.to_string()), "output", Some(self.holder_name.to_string()), "matcher_match")]
     }
 
     fn num_outgoing_signals(&self) -> usize {
         1
+    }
+
+    fn get_name(&self) -> &str {
+        &self.name
     }
 }
 

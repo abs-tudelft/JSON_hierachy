@@ -1,10 +1,11 @@
-use crate::analysis::{gen_tools::{type_manager::StreamType}, types::{TilStreamingInterface, TilSignal, Generic, GenericType, StreamDim, TilStreamDirection}, GeneratorParams};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal, Generic, GenericType, TilStreamDirection, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
 
 use super::{JsonComponent, JsonType, Value, Generatable, JsonComponentValue};
 
 impl Value {
-    pub fn new(data_type: JsonType, outer_nested: usize) -> Value {
+    pub fn new(name: &str, data_type: JsonType, outer_nested: usize) -> Value {
         Value {
+            name: name.to_string(),
             data_type,
             outer_nested,
         }
@@ -13,7 +14,7 @@ impl Value {
 
 impl Generatable for Value {
     fn get_streaming_interface(&self, gen_params: &GeneratorParams) -> TilStreamingInterface {
-        let mut interface = TilStreamingInterface::new();
+        let mut interface = TilStreamingInterface::default();
         interface.add_generic(Generic::new("EPC", GenericType::Positive(gen_params.epc)));
         let dim_name = "DIM";
         let dim = self.outer_nested + 1;
@@ -22,8 +23,9 @@ impl Generatable for Value {
 
         // Input type
         interface.add_stream("input", TilStreamDirection::Input,
-            StreamType::Json( 
-                StreamDim::new(Some(dim_name.to_string()), dim, 0)
+            StreamTypeDecl::new(
+                StreamType::Json,
+                Some(StreamDim::new(Some(dim_name.to_string()), dim, 0))
             )
         );
 
@@ -31,8 +33,9 @@ impl Generatable for Value {
             JsonType::String => {
                 // Output type
                 interface.add_stream("output", TilStreamDirection::Output,
-                    StreamType::Json( 
-                        StreamDim::new(Some(dim_name.to_string()),  dim, 0)
+                    StreamTypeDecl::new(
+                        StreamType::Json, 
+                        Some(StreamDim::new(Some(dim_name.to_string()),  dim, 0))
                     )
                 );
 
@@ -43,8 +46,9 @@ impl Generatable for Value {
 
                 // Output type
                 interface.add_stream("output", TilStreamDirection::Output,
-                StreamType::Int( 
-                        StreamDim::new(Some(dim_name.to_string()),  dim, -1)
+                    StreamTypeDecl::new(
+                        StreamType::Int, 
+                        Some(StreamDim::new(Some(dim_name.to_string()),  dim, -1))
                     )
                 );
 
@@ -53,8 +57,9 @@ impl Generatable for Value {
             JsonType::Boolean => {
                 // Output type
                 interface.add_stream("output", TilStreamDirection::Output,
-                StreamType::Bool( 
-                        StreamDim::new(Some(dim_name.to_string()),  dim, -1)
+                    StreamTypeDecl::new(
+                        StreamType::Bool,
+                        Some(StreamDim::new(Some(dim_name.to_string()),  dim, -1))
                     )
                 );
 
@@ -65,17 +70,9 @@ impl Generatable for Value {
 
     fn get_streaming_types(&self) -> Vec<StreamType> {
         match self.data_type {
-            JsonType::String => vec![StreamType::Json(StreamDim::new(None, 0, 0))],
-            JsonType::Integer => vec![StreamType::Json(StreamDim::new(None, 0, 0)), StreamType::Int(StreamDim::new(None, 0, 0))],
-            JsonType::Boolean => vec![StreamType::Json(StreamDim::new(None, 0, 0)), StreamType::Bool(StreamDim::new(None, 0, 0))],
-        }
-    }
-
-    fn get_preffered_name(&self) -> String {
-        match self.data_type {
-            JsonType::String => "string_parser".to_string(),
-            JsonType::Integer => "int_parser".to_string(),
-            JsonType::Boolean => "bool_parser".to_string(),
+            JsonType::String => vec![StreamType::Json],
+            JsonType::Integer => vec![StreamType::Json, StreamType::Int],
+            JsonType::Boolean => vec![StreamType::Json, StreamType::Bool],
         }
     }
 
@@ -83,8 +80,12 @@ impl Generatable for Value {
         self.outer_nested
     }
 
-    fn get_signals(&self, instance_name: &Option<String>, instance_stream_name: &str, parent_name: &Option<String>, parent_stream_name: &str) -> Vec<TilSignal> {
-        vec![TilSignal::new(parent_name, parent_stream_name, instance_name, instance_stream_name)]     
+    fn get_outgoing_signals(&self) -> Vec<TilSignal> {
+        vec![]
+    }
+
+    fn get_name(&self) -> &str {
+        &self.name
     }
 
     fn num_outgoing_signals(&self) -> usize {

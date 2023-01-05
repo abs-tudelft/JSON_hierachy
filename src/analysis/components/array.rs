@@ -1,10 +1,11 @@
-use crate::analysis::{types::{TilStreamingInterface, TilSignal, Generic, GenericType, StreamDim, TilStreamDirection}, GeneratorParams, gen_tools::type_manager::StreamType};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal, Generic, GenericType, TilStreamDirection, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
 
 use super::{Array, JsonComponent, Generatable, JsonComponentValue};
 
 impl Array {
-    pub fn new(outer_nested: usize, inner_nested: usize, value: Option<Box<JsonComponent>>) -> Array {
+    pub fn new(name: &str, outer_nested: usize, inner_nested: usize, value: Option<Box<JsonComponent>>) -> Array {
         Array {
+            name: name.to_string(),
             outer_nested,
             inner_nested,
             value,
@@ -14,7 +15,7 @@ impl Array {
 
 impl Generatable for Array {
     fn get_streaming_interface(&self, gen_params: &GeneratorParams) -> TilStreamingInterface {       
-        let mut interface = TilStreamingInterface::new();
+        let mut interface = TilStreamingInterface::default();
 
         interface.add_generic(Generic::new("EPC", GenericType::Positive(gen_params.epc)));
         let dim_name = "DIM";
@@ -26,15 +27,17 @@ impl Generatable for Array {
 
         // Input type
         interface.add_stream("input", TilStreamDirection::Input,
-            StreamType::Json( 
-                StreamDim::new(Some(dim_name.to_string()), dim, 0)
+            StreamTypeDecl::new( 
+                StreamType::Json,
+                Some(StreamDim::new(Some(dim_name.to_string()), dim, 0))
             )
         );
 
         // Output type
         interface.add_stream("output", TilStreamDirection::Output,
-            StreamType::Json( 
-                StreamDim::new(Some(dim_name.to_string()), dim, 1)
+            StreamTypeDecl::new( 
+                StreamType::Json,
+                Some(StreamDim::new(Some(dim_name.to_string()), dim, 1))
             )
         );
 
@@ -42,23 +45,46 @@ impl Generatable for Array {
     }
 
     fn get_streaming_types(&self) -> Vec<StreamType> {
-        vec![StreamType::Json(StreamDim::new(None, 0, 0))]
-    }
-
-    fn get_preffered_name(&self) -> String {
-        "array_parser".to_string()
+        vec![StreamType::Json]
     }
 
     fn get_nesting_level(&self) -> usize {
         self.outer_nested
     }
 
-    fn get_signals(&self, instance_name: &Option<String>, instance_stream_name: &str, parent_name: &Option<String>, parent_stream_name: &str) -> Vec<TilSignal> {
-        vec![TilSignal::new(parent_name, parent_stream_name, instance_name, instance_stream_name)]     
+    fn get_outgoing_signals(&self) -> Vec<TilSignal> {
+        // First check if there is a child
+        match &self.value {
+            Some(child) => {
+
+                // If the child is an object, get the children of the object
+                let children = match **child {
+                    JsonComponent::Object(ref obj) => obj.get_children(),
+                    _ => vec![(**child).clone()],
+                };
+
+                let mut signals: Vec<TilSignal> = Vec::new();
+
+                for child in children {
+                    // Force the child to be generatable
+                    let child =Box::<dyn Generatable>::from(child);
+                    signals.push(
+                        TilSignal::new(Some(self.name.clone()), "output", Some(child.get_name().to_string()), "input")
+                    );
+                }
+
+                signals
+            },
+            None => vec![],
+        }       
     }
 
     fn num_outgoing_signals(&self) -> usize {
         1
+    }
+
+    fn get_name(&self) -> &str {
+        &self.name
     }
 }
 

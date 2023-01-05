@@ -5,7 +5,7 @@ pub enum JsonType {
     Boolean,
 }
 
-use super::{types::{TilStreamingInterface, TilSignal}, gen_tools::{type_manager::StreamType}, GeneratorParams};
+use super::{types::{TilStreamingInterface, TilSignal, TilComponent, TilImplementationType}, GeneratorParams, analyzer::type_manager::StreamType};
 
 pub trait Generatable {
     
@@ -18,10 +18,30 @@ pub trait Generatable {
     // fn get_output_type_params(&self, gen_params: &GeneratorParams) -> StreamType;
     fn get_streaming_interface(&self, gen_params: &GeneratorParams) -> TilStreamingInterface;
     fn get_streaming_types(&self) -> Vec<StreamType>;
-    fn get_signals(&self, instance_name: &Option<String>, instance_stream_name: &str, parent_name: &Option<String>, parent_stream_name: &str) -> Vec<TilSignal>;
+    fn get_outgoing_signals(&self) -> Vec<TilSignal>;
     fn num_outgoing_signals(&self) -> usize;
-    fn get_preffered_name(&self) -> String;
     fn get_nesting_level(&self) -> usize;
+    fn get_name(&self) -> &str;
+
+    fn to_til_component(&self, gen_params: &GeneratorParams) -> TilComponent {
+        // Create a new component
+        let mut entity = TilComponent::new(self.get_name());
+
+        // Generate streaming interface
+        let streaming_interface = self.get_streaming_interface(gen_params);
+
+        // Add streaming interface to entity
+        entity.set_streaming_interface(streaming_interface);
+
+        // Set implementation path
+        entity.set_implementation(TilImplementationType::Path("./vhdl_dir".to_string()));
+
+        entity
+    }
+
+    fn get_file_type(&self) {
+        unimplemented!()
+    }
 }
 
 pub trait JsonComponentValue {
@@ -44,6 +64,7 @@ pub enum JsonComponent {
 mod value;
 #[derive(Clone)]
 pub struct Value {
+    name: String,
     data_type: JsonType,
     outer_nested: usize
 }
@@ -51,6 +72,7 @@ pub struct Value {
 mod array;
 #[derive(Clone)]
 pub struct Array {
+    name: String,
     outer_nested: usize,
     inner_nested: usize,
     value: Option<Box<JsonComponent>>
@@ -65,6 +87,7 @@ pub struct Object {
 mod record;
 #[derive(Clone)]
 pub struct Record {
+    name: String,
     outer_nested: usize,
     inner_nested: usize,
     key: Key
@@ -73,6 +96,7 @@ pub struct Record {
 mod key;
 #[derive(Clone)]
 pub struct Key {
+    name: String,
     matcher: Matcher,
     outer_nested: usize,
     value: Option<Box<JsonComponent>>
@@ -81,6 +105,8 @@ pub struct Key {
 mod matcher;
 #[derive(Clone)]
 pub struct Matcher {
+    name: String,
+    holder_name: String,
     matcher: String,
     outer_nested: usize
 }
@@ -130,6 +156,19 @@ impl JsonComponentValue for JsonComponent {
             JsonComponent::Record(record) => record.to_graph_node(),
             JsonComponent::Key(key) => key.to_graph_node(),
             JsonComponent::Matcher(matcher) => matcher.to_graph_node()
+        }
+    }
+}
+
+impl From<JsonComponent> for Box<dyn Generatable> {
+    fn from(value: JsonComponent) -> Self {
+        match value {
+            JsonComponent::Value(value) => Box::new(value),
+            JsonComponent::Array(array) => Box::new(array),
+            JsonComponent::Object(_) => panic!("Cannot convert object to generatable"),
+            JsonComponent::Record(record) => Box::new(record),
+            JsonComponent::Key(key) => Box::new(key),
+            JsonComponent::Matcher(matcher) => Box::new(matcher)
         }
     }
 }
