@@ -13,7 +13,7 @@ use super::{Generator, til};
 
 fn generate_postlude() -> String {
     let mut postlude = String::new();
-    postlude.push('}');
+    postlude.push_str("\n}");
 
     postlude
 }
@@ -37,6 +37,10 @@ impl Generator {
         for stream_def in stream_defs {
             til.push_str(&format!("{}\n\n", stream_def));
         }
+
+
+        let top_component = self.analyzer.assemble_top_component().unwrap();
+        til.push_str(&top_component.to_string());
 
         // // Prepare the top component
         // let top_component = self.analyze_from_top_component();

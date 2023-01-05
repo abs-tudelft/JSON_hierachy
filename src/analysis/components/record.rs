@@ -54,9 +54,9 @@ impl Generatable for Record {
     fn get_outgoing_signals(&self) -> Vec<TilSignal> {
         vec![
             TilSignal::Intermediate { 
-                source_inst_name: self.name.clone(), 
+                source_inst_name: self.get_instance_name(), 
                 source_stream_name: "output".to_owned(), 
-                dest_inst_name: self.key.get_name().to_string(), 
+                dest_inst_name: self.key.get_instance_name(), 
                 dest_stream_name: "input".to_owned() 
             }
         ]

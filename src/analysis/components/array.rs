@@ -1,4 +1,4 @@
-use crate::analysis::{types::{TilStreamingInterface, streaming_interface::{Generic, GenericType, TilStreamDirection}, stream_types::{StreamTypeDecl, StreamDim}, TilSignal}, GeneratorParams, analyzer::type_manager::StreamType};
+use crate::analysis::{types::{TilStreamingInterface, streaming_interface::{Generic, GenericType, TilStreamDirection, TilStream}, stream_types::{StreamTypeDecl, StreamDim}, TilSignal}, GeneratorParams, analyzer::type_manager::StreamType};
 
 use super::{Array, JsonComponent, Generatable, JsonComponentValue};
 
@@ -69,13 +69,34 @@ impl Generatable for Array {
                     // Force the child to be generatable
                     let child =Box::<dyn Generatable>::from(child);
                     signals.push(
-                        TilSignal::Intermediate { source_inst_name: self.name.clone(), source_stream_name: "output".to_owned(), dest_inst_name: child.get_name().to_string(), dest_stream_name: "input".to_owned() }
+                        TilSignal::Intermediate { 
+                            source_inst_name: self.get_instance_name(), 
+                            source_stream_name: "output".to_owned(), 
+                            dest_inst_name: child.get_instance_name(), 
+                            dest_stream_name: "input".to_owned() 
+                        }
                     );
                 }
 
                 signals
             },
-            None => vec![],
+            None => {
+                let output_name = format!("output_{}", self.get_instance_name());
+
+                vec![
+                    TilSignal::Output { 
+                        source_inst_name: self.get_instance_name(), 
+                        source_stream_name: "output".to_owned(), 
+                        dest_stream_name: output_name.clone(),
+                        output_stream: TilStream::new(&output_name, TilStreamDirection::Output, 
+                            StreamTypeDecl::new( 
+                                StreamType::Json,
+                                Some(StreamDim::new(None, self.outer_nested, 2))
+                            ) 
+                        )
+                    }
+                ]
+            },
         }       
     }
 

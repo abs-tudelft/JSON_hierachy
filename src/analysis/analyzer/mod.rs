@@ -2,11 +2,12 @@ use json::JsonValue;
 
 use crate::analysis::components::JsonComponent;
 
-use super::{types::TilComponent, GeneratorParams, analyzer::{name_reg::NameReg, type_manager::{TypeManager, StreamType}}};
+use super::{types::{TilComponent, TilSignal}, GeneratorParams, analyzer::{name_reg::NameReg, type_manager::{TypeManager, StreamType}}};
 
 mod analysis;
 mod name_reg;
 pub mod type_manager;
+pub mod top_component;
 
 /**********************************************************************************
  * Set of functions to analyze the parsed JSON object into a component structure  *
@@ -18,6 +19,8 @@ pub struct Analyzer {
     type_manager: TypeManager,
     entity_list: Vec<TilComponent>,
     gen_params: GeneratorParams,
+    signal_list: Vec<TilSignal>,
+    top_component: Option<JsonComponent>,
 }
 
 impl Analyzer {
@@ -27,14 +30,16 @@ impl Analyzer {
             type_manager: TypeManager::new(),
             entity_list: Vec::new(),
             gen_params: GeneratorParams::default(),
+            signal_list: Vec::new(),
+            top_component: None,
         }
     }
 
-    pub fn analyze(&mut self, root: &JsonValue, gen_params: GeneratorParams) -> Option<JsonComponent> {
+    pub fn analyze(&mut self, root: &JsonValue, gen_params: GeneratorParams) {
         self.gen_params = gen_params;
 
         let (root_component, _) = self.analyze_element(root, 0, 0);
-        root_component
+        self.top_component = root_component;
     }
 
     pub fn get_definitions(&self) -> (Vec<StreamType>, &Vec<TilComponent>) {   
@@ -45,3 +50,7 @@ impl Analyzer {
     }
 }
 
+#[derive(Debug)]
+pub enum AnalyzerError {
+    NoTop,
+}

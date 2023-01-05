@@ -39,6 +39,10 @@ pub trait Generatable {
         entity
     }
 
+    fn get_instance_name(&self) -> String {
+        format!("{}_inst", self.get_name())
+    }
+
     fn get_file_type(&self) {
         unimplemented!()
     }

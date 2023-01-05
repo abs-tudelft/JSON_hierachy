@@ -13,6 +13,10 @@ impl TilStreamingInterface {
         );
     }
 
+    pub fn add_til_stream(&mut self, stream: TilStream) {
+        self.streams.push(stream);
+    }
+
     pub fn add_generic(&mut self, generic: Generic) {
         self.generics.push(generic);
     }
@@ -52,6 +56,14 @@ pub struct TilStream {
 }
 
 impl TilStream {
+    pub fn new(name: &str, direction: TilStreamDirection, stream_type: StreamTypeDecl) -> TilStream {
+        TilStream {
+            name: String::from(name),
+            direction,
+            stream_type,
+        }
+    }
+
     pub fn get_name(&self) -> &str {
         &self.name
     }

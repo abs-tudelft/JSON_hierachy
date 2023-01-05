@@ -25,7 +25,7 @@ impl Display for TilSignal {
         // Add stream name
         signal.push_str(self.get_dest_stream_name());
 
-        write!(f, "{}", signal)
+        write!(f, "{};", signal)
     }
 }
 

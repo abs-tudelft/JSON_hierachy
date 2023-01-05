@@ -53,9 +53,9 @@ impl Generatable for Matcher {
     fn get_outgoing_signals(&self) -> Vec<TilSignal> {
         vec![
             TilSignal::Intermediate { 
-                source_inst_name: self.name.clone(), 
+                source_inst_name: self.get_instance_name(), 
                 source_stream_name: "output".to_owned(), 
-                dest_inst_name: self.holder_name.to_string(), 
+                dest_inst_name: format!("{}_inst", self.holder_name), 
                 dest_stream_name: "matcher_match".to_owned() 
             }
         ]

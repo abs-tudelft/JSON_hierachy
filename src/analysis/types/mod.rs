@@ -29,6 +29,7 @@ pub enum TilSignal {
         source_inst_name: String,
         source_stream_name: String,
         dest_stream_name: String,
+        output_stream: TilStream,
     },
 }
 

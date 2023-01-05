@@ -21,7 +21,7 @@ impl Generator {
         // In case of error, return the error
         .map_err(GeneratorError::JsonError)?; 
 
-        self.root = self.analyzer.analyze(&parsed, self.gen_params.clone());
+        self.analyzer.analyze(&parsed, self.gen_params.clone());
 
         Ok(())
     }

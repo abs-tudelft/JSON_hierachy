@@ -1,4 +1,4 @@
-use crate::analysis::{types::{TilStreamingInterface, TilSignal, streaming_interface::{Generic, GenericType, TilStreamDirection}, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal, streaming_interface::{Generic, GenericType, TilStreamDirection, TilStream}, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
 
 use super::{JsonComponent, JsonType, Value, Generatable, JsonComponentValue};
 
@@ -81,7 +81,22 @@ impl Generatable for Value {
     }
 
     fn get_outgoing_signals(&self) -> Vec<TilSignal> {
-        vec![]
+        let output_name = format!("output_{}", self.get_instance_name());
+
+        vec![
+            TilSignal::Output { 
+                source_inst_name: self.get_instance_name(), 
+                source_stream_name: "output".to_owned(), 
+                dest_stream_name: output_name.clone(),
+                output_stream: TilStream::new(&output_name, TilStreamDirection::Output, 
+                    match self.data_type {
+                        JsonType::String => StreamTypeDecl::new(StreamType::Json, Some(StreamDim::new(None, self.outer_nested, 1))),
+                        JsonType::Integer => StreamTypeDecl::new(StreamType::Int, Some(StreamDim::new(None, self.outer_nested, 0))),
+                        JsonType::Boolean => StreamTypeDecl::new(StreamType::Bool, Some(StreamDim::new(None, self.outer_nested, 0))),
+                    }
+                )
+            }
+        ]
     }
 
     fn get_name(&self) -> &str {

@@ -13,7 +13,7 @@ impl Analyzer {
 
         let record_name = self.name_reg.register("record_parser", outer_nesting + 1);
         let key_name = self.name_reg.register("key_parser", outer_nesting + 2);
-        let matcher_name = self.name_reg.register(&format!("{}_parser", key), outer_nesting + 2);
+        let matcher_name = self.name_reg.register(&format!("{}_matcher", key), outer_nesting + 2);
 
         // Create a components
         let matcher = Matcher::new(&matcher_name, &key_name, key.to_string(), outer_nesting + 2);
@@ -34,6 +34,11 @@ impl Analyzer {
         self.type_manager.register_from_component(&matcher);
         self.type_manager.register_from_component(&key);
         self.type_manager.register_from_component(&record);
+
+        // Add signals to signal list
+        self.signal_list.append(&mut matcher.get_outgoing_signals());
+        self.signal_list.append(&mut key.get_outgoing_signals());
+        self.signal_list.append(&mut record.get_outgoing_signals());
 
         // Return the record and the new inner nesting level
         (Some(record), new_inner_nesting + 1)  
@@ -162,6 +167,9 @@ impl Analyzer {
 
                 // Register types
                 self.type_manager.register_from_component(gen_component);
+
+                // Add signals to signal list
+                self.signal_list.append(&mut gen_component.get_outgoing_signals());
             }
         }
 

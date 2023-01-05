@@ -1,4 +1,4 @@
-use crate::analysis::{types::{TilStreamingInterface, TilSignal, streaming_interface::{Generic, GenericType, TilStreamDirection}, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal, streaming_interface::{Generic, GenericType, TilStreamDirection, TilStream}, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
 
 use super::{Key, Generatable, JsonComponent, Matcher, JsonComponentValue};
 
@@ -66,30 +66,49 @@ impl Generatable for Key {
     fn get_outgoing_signals(&self) -> Vec<TilSignal> {
         let mut signals = vec![
             TilSignal::Intermediate { 
-                source_inst_name: self.name.clone(), 
+                source_inst_name: self.get_instance_name(), 
                 source_stream_name: "matcher_str".to_owned(), 
-                dest_inst_name: self.matcher.get_name().to_string(), 
+                dest_inst_name: self.matcher.get_instance_name(), 
                 dest_stream_name: "input".to_owned() 
             }
         ];
 
         // First check if there is a child
-        if let Some(child) = &self.value {
-            // If the child is an object, get the children of the object
-            let children = match **child {
-                JsonComponent::Object(ref obj) => obj.get_children(),
-                _ => vec![(**child).clone()],
-            };
+        match &self.value {
+            Some(child) => {
+                // If the child is an object, get the children of the object
+                let children = match **child {
+                    JsonComponent::Object(ref obj) => obj.get_children(),
+                    _ => vec![(**child).clone()],
+                };
 
-            for child in children {
-                // Force the child to be generatable
-                let child =Box::<dyn Generatable>::from(child);
+                for child in children {
+                    // Force the child to be generatable
+                    let child =Box::<dyn Generatable>::from(child);
+                    signals.push(
+                        TilSignal::Intermediate { 
+                            source_inst_name: self.get_instance_name(), 
+                            source_stream_name: "output".to_owned(), 
+                            dest_inst_name: child.get_instance_name(), 
+                            dest_stream_name: "input".to_owned() 
+                        }
+                    );
+                }
+            },
+            None => {
+                let output_name = format!("output_{}", self.get_instance_name());
+
                 signals.push(
-                    TilSignal::Intermediate { 
-                        source_inst_name: self.name.clone(), 
+                    TilSignal::Output { 
+                        source_inst_name: self.get_instance_name(), 
                         source_stream_name: "output".to_owned(), 
-                        dest_inst_name: child.get_name().to_string(), 
-                        dest_stream_name: "input".to_owned() 
+                        dest_stream_name: output_name.clone(),
+                        output_stream: TilStream::new(&output_name, TilStreamDirection::Output, 
+                            StreamTypeDecl::new( 
+                                StreamType::Json,
+                                Some(StreamDim::new(None, self.outer_nested, 1))
+                            ) 
+                        )
                     }
                 );
             }

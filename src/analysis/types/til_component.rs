@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 
-use indoc::formatdoc;
+use indoc::{formatdoc, writedoc};
 
 use super::{TilComponent, TilStreamingInterface, TilSignal};
 
@@ -80,7 +80,11 @@ impl Display for TilComponent {
             )
         );
 
-        write!(f, "{}", comp_def)
+        if let Some(implementation) = &self.implementation {
+            comp_def.push_str(&implementation.to_string());
+        }
+
+        write!(f, "{};", comp_def)
     }
 }
 
@@ -120,6 +124,48 @@ impl TilInlineImplementation {
     }
 }
 
+impl Display for TilImplementationType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TilImplementationType::Inline(inline) => {
+                let mut impl_til = String::new();
+
+                for instance in inline.get_instances() {
+                    impl_til.push_str(&instance.to_string());
+                    impl_til.push('\n');
+                }
+
+                impl_til.push('\n');
+
+                for signal in inline.get_signals() {
+                    impl_til.push_str(&signal.to_string());
+                    impl_til.push('\n');
+                }
+
+                
+                writedoc!(f,
+                    "
+                    {{
+                        impl: {{
+                            {}
+                        }}
+                    }}",
+                    impl_til
+                )
+            },
+            TilImplementationType::Path(path) => {
+                writedoc!(f,
+                    "
+                    {{
+                        impl: \"{}\"
+                    }}",
+                    path
+                )
+            }
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct TilInstance {
     component_name: String,
@@ -133,8 +179,10 @@ impl TilInstance {
             instance_name: String::from(instance_name),
         }
     }
+}
 
-    pub fn to_til(&self) -> String {
-        format!("{} = {};", self.instance_name, self.component_name)
+impl Display for TilInstance {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} = {};", self.instance_name, self.component_name)
     }
 }

@@ -27,7 +27,7 @@ fn main() {
     }
     "#;
 
-    let visualize = true;
+    let visualize = false;
 
     // Create a new generator
     let mut generator = Generator::new(4, 8, 64);
