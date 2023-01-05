@@ -1,4 +1,4 @@
-use crate::analysis::{types::{TilStreamingInterface, TilSignal, Generic, GenericType, TilStreamDirection, stream_types::StreamTypeDecl}, GeneratorParams, analyzer::type_manager::StreamType};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal, streaming_interface::{Generic, GenericType, TilStreamDirection}, stream_types::StreamTypeDecl}, GeneratorParams, analyzer::type_manager::StreamType};
 
 use super::{JsonComponent, Matcher, Generatable, JsonComponentValue};
 
@@ -51,7 +51,14 @@ impl Generatable for Matcher {
     }
 
     fn get_outgoing_signals(&self) -> Vec<TilSignal> {
-        vec![TilSignal::new(Some(self.name.to_string()), "output", Some(self.holder_name.to_string()), "matcher_match")]
+        vec![
+            TilSignal::Intermediate { 
+                source_inst_name: self.name.clone(), 
+                source_stream_name: "output".to_owned(), 
+                dest_inst_name: self.holder_name.to_string(), 
+                dest_stream_name: "matcher_match".to_owned() 
+            }
+        ]
     }
 
     fn num_outgoing_signals(&self) -> usize {

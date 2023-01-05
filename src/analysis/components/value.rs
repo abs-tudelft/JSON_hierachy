@@ -1,4 +1,4 @@
-use crate::analysis::{types::{TilStreamingInterface, TilSignal, Generic, GenericType, TilStreamDirection, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal, streaming_interface::{Generic, GenericType, TilStreamDirection}, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
 
 use super::{JsonComponent, JsonType, Value, Generatable, JsonComponentValue};
 

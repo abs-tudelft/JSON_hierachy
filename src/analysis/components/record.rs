@@ -1,4 +1,4 @@
-use crate::analysis::{types::{TilStreamingInterface, TilSignal, GenericType, Generic, TilStreamDirection, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal, streaming_interface::{Generic, GenericType, TilStreamDirection}, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
 
 use super::{Record, JsonComponent, Generatable, Key, JsonComponentValue};
 
@@ -52,7 +52,14 @@ impl Generatable for Record {
     }
 
     fn get_outgoing_signals(&self) -> Vec<TilSignal> {
-        vec![TilSignal::new(Some(self.name.to_string()), "output", Some(self.key.get_name().to_string()), "input")]
+        vec![
+            TilSignal::Intermediate { 
+                source_inst_name: self.name.clone(), 
+                source_stream_name: "output".to_owned(), 
+                dest_inst_name: self.key.get_name().to_string(), 
+                dest_stream_name: "input".to_owned() 
+            }
+        ]
     }
 
     fn get_name(&self) -> &str {

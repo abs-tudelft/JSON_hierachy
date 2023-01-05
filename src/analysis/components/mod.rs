@@ -5,7 +5,7 @@ pub enum JsonType {
     Boolean,
 }
 
-use super::{types::{TilStreamingInterface, TilSignal, TilComponent, TilImplementationType}, GeneratorParams, analyzer::type_manager::StreamType};
+use super::{types::{TilStreamingInterface, TilSignal, TilComponent, til_component::TilImplementationType}, GeneratorParams, analyzer::type_manager::StreamType};
 
 pub trait Generatable {
     

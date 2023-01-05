@@ -1,4 +1,4 @@
-use crate::analysis::{types::{TilStreamingInterface, TilSignal, Generic, GenericType, TilStreamDirection, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
+use crate::analysis::{types::{TilStreamingInterface, streaming_interface::{Generic, GenericType, TilStreamDirection}, stream_types::{StreamTypeDecl, StreamDim}, TilSignal}, GeneratorParams, analyzer::type_manager::StreamType};
 
 use super::{Array, JsonComponent, Generatable, JsonComponentValue};
 
@@ -69,7 +69,7 @@ impl Generatable for Array {
                     // Force the child to be generatable
                     let child =Box::<dyn Generatable>::from(child);
                     signals.push(
-                        TilSignal::new(Some(self.name.clone()), "output", Some(child.get_name().to_string()), "input")
+                        TilSignal::Intermediate { source_inst_name: self.name.clone(), source_stream_name: "output".to_owned(), dest_inst_name: child.get_name().to_string(), dest_stream_name: "input".to_owned() }
                     );
                 }
 

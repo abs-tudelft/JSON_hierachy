@@ -1,10 +1,9 @@
-use std::fmt::{Display, Formatter};
-
-use indoc::formatdoc;
-
-use self::stream_types::StreamTypeDecl;
+use self::{streaming_interface::{TilStream, Generic}, til_component::TilImplementationType};
 
 pub mod stream_types;
+pub mod signals;
+pub mod streaming_interface;
+pub mod til_component;
 
 #[derive(Clone)]
 pub struct TilComponent {
@@ -13,315 +12,28 @@ pub struct TilComponent {
     implementation: Option<TilImplementationType>,
 }
 
-impl TilComponent {
-    pub fn new(name: &str) -> TilComponent {
-        TilComponent {
-            name: String::from(name),
-            streams: TilStreamingInterface::default(),
-            implementation: None,
-        }
-    }
-
-    pub fn get_name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn set_implementation(&mut self, implementation: TilImplementationType) {
-        self.implementation = Some(implementation);
-    }
-
-    pub fn set_streaming_interface(&mut self, stream_interface: TilStreamingInterface) {
-        self.streams = stream_interface;
-    }
-
-    pub fn get_streams(&self) -> &TilStreamingInterface {
-        &self.streams
-    }
-
-    pub fn get_streams_mut(&mut self) -> &mut TilStreamingInterface {
-        &mut self.streams
-    }
-
-    pub fn get_implementation(&self) -> &Option<TilImplementationType> {
-        &self.implementation
-    }
-}
-
-impl Display for TilComponent {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut comp_def = String::new();
-        let mut generics = String::new();
-        let mut stream_defs = String::new();
-
-        if !self.get_streams().get_generics().is_empty() {
-            let mut generic_defs = String::new();
-
-            for generic in self.get_streams().get_generics() {
-                generic_defs.push_str(
-                    &format!("{},\n", generic)
-                );
-            }
-
-            generics = formatdoc!(
-                "
-                <
-                {}
-                >",
-                generic_defs
-            );
-        }
-
-        for stream in self.get_streams().get_streams() {
-            stream_defs.push_str(
-                &format!("{},\n", stream)
-            );
-        }
-
-        comp_def.push_str(
-            &formatdoc!(
-                "
-                streamlet {} = {} (
-                    {}
-                )",
-                self.get_name(),
-                generics,
-                stream_defs
-            )
-        );
-
-        write!(f, "{}", comp_def)
-    }
-}
-
 #[derive(Clone)]
-pub enum TilImplementationType {
-    Path(String),
-    Inline(TilInlineImplementation),
-}
-
-#[derive(Clone, Default)]
-pub struct TilInlineImplementation {
-    instances: Vec<TilInstance>,
-    signals: Vec<TilSignal>,
-}
-
-impl TilInlineImplementation {
-    pub fn add_instance(&mut self, component_name: String) -> String{
-        let instance_name = format!("{}_inst", component_name);
-        self.instances.push(TilInstance::new(&component_name, &instance_name));
-        instance_name
-    }
-
-    pub fn add_signal(&mut self, signal: TilSignal) {
-        self.signals.push(signal);
-    }
-
-    pub fn add_multiple_signals(&mut self, signals: Vec<TilSignal>) {
-        self.signals.extend(signals);
-    }
-
-    pub fn get_instances(&self) -> &Vec<TilInstance> {
-        &self.instances
-    }
-
-    pub fn get_signals(&self) -> &Vec<TilSignal> {
-        &self.signals
-    }
-}
-
-#[derive(Clone)]
-pub struct TilInstance {
-    component_name: String,
-    instance_name: String,
-}
-
-impl TilInstance {
-    pub fn new(component_name: &str, instance_name: &str) -> TilInstance {
-        TilInstance {
-            component_name: String::from(component_name),
-            instance_name: String::from(instance_name),
-        }
-    }
-
-    pub fn to_til(&self) -> String {
-        format!("{} = {};", self.instance_name, self.component_name)
-    }
-}
-
-#[derive(Clone)]
-pub struct TilSignal {
-    source_inst_name: Option<String>,
-    source_stream_name: String,
-    dest_inst_name: Option<String>,
-    dest_stream_name: String,
-}
-
-impl TilSignal {
-    pub fn new(source_inst_name: Option<String>, source_stream_name: &str, dest_inst_name: Option<String>, dest_stream_name: &str) -> TilSignal {
-        TilSignal {
-            source_inst_name,
-            source_stream_name: String::from(source_stream_name),
-            dest_inst_name,
-            dest_stream_name: String::from(dest_stream_name),
-        }
-    }
-
-    pub fn to_til(&self) -> String {
-        let mut signal = String::new();
-
-        // If the signal is from an instance, add the instance name
-        if let Some(source_inst_name) = &self.source_inst_name {
-            signal.push_str(&format!("{}.", source_inst_name));
-        }
-
-        // Add stream name
-        signal.push_str(&self.source_stream_name);
-
-        // Connector
-        signal.push_str(" -- ");
-
-        // If the signal is to an instance, add the instance name
-        if let Some(dest_inst_name) = &self.dest_inst_name {
-            signal.push_str(&format!("{}.", dest_inst_name));
-        }
-        
-        // Add stream name
-        signal.push_str(&format!("{};", self.dest_stream_name));
-    
-        signal
-    }
+pub enum TilSignal {
+    Input {
+        source_stream_name: String,
+        dest_inst_name: String,
+        dest_stream_name: String,
+    },
+    Intermediate {
+        source_inst_name: String,
+        source_stream_name: String,
+        dest_inst_name: String,
+        dest_stream_name: String,
+    },
+    Output {
+        source_inst_name: String,
+        source_stream_name: String,
+        dest_stream_name: String,
+    },
 }
 
 #[derive(Clone, Default)]
 pub struct TilStreamingInterface {
     generics: Vec<Generic>,
     streams: Vec<TilStream>,
-}
-
-impl TilStreamingInterface {
-    pub fn add_stream(&mut self, stream_name: &str, direction: TilStreamDirection, stream_type: StreamTypeDecl) {
-        self.streams.push(
-            TilStream {
-                name: String::from(stream_name),
-                direction,
-                stream_type,
-            }
-        );
-    }
-
-    pub fn add_generic(&mut self, generic: Generic) {
-        self.generics.push(generic);
-    }
-
-    pub fn get_generics(&self) -> &Vec<Generic> {
-        &self.generics
-    }
-
-    pub fn get_streams(&self) -> &Vec<TilStream> {
-        &self.streams
-    }
-
-    pub fn get_input_streams(&self) -> Vec<&TilStream> {
-        self.streams.iter().filter(|stream| {
-            match stream.direction {
-                TilStreamDirection::Input => true,
-                TilStreamDirection::Output => false,
-            }
-        }).collect()
-    }
-
-    pub fn get_output_streams(&self) -> Vec<&TilStream> {
-        self.streams.iter().filter(|stream| {
-            match stream.direction {
-                TilStreamDirection::Input => false,
-                TilStreamDirection::Output => true,
-            }
-        }).collect()
-    }
-}
-
-#[derive(Clone)]
-pub struct TilStream {
-    name: String,
-    direction: TilStreamDirection,
-    stream_type: StreamTypeDecl,
-}
-
-impl TilStream {
-    pub fn get_name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn get_type(&self) -> &StreamTypeDecl {
-        &self.stream_type
-    }
-}
-
-impl Display for TilStream {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}: {} {}", self.get_name(), self.direction, self.get_type())
-    }
-}
-
-#[derive(Clone, Copy)]
-pub enum TilStreamDirection {
-    Input,
-    Output,
-}
-
-impl Display for TilStreamDirection {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TilStreamDirection::Input => write!(f, "in"),
-            TilStreamDirection::Output => write!(f, "out"),
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct Generic {
-    name: String,
-    generic_type: GenericType,
-}
-
-impl Generic {
-    pub fn new(name: &str, generic_type: GenericType) -> Generic {
-        Generic {
-            name: String::from(name),
-            generic_type,
-        }
-    }
-
-    pub fn get_name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn get_type(&self) -> &GenericType {
-        &self.generic_type
-    }
-}
-
-impl Display for Generic {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}: {}", self.get_name(), self.get_type())
-    }
-}
-
-#[derive(Clone, Copy)]
-pub enum GenericType {
-    Integer(isize),
-    Natural(usize),
-    Positive(usize),
-    Dimensionality(usize),
-}
-
-impl Display for GenericType {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            GenericType::Integer(value) => write!(f, "integer = {}", value),
-            GenericType::Natural(value) => write!(f, "natural = {}", value),
-            GenericType::Positive(value) => write!(f, "positive = {}", value),
-            GenericType::Dimensionality(value) => write!(f, "dimensionality = {}", value),
-        }
-    }
 }

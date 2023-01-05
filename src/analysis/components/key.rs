@@ -1,4 +1,4 @@
-use crate::analysis::{types::{TilStreamingInterface, TilSignal, Generic, GenericType, TilStreamDirection, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal, streaming_interface::{Generic, GenericType, TilStreamDirection}, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
 
 use super::{Key, Generatable, JsonComponent, Matcher, JsonComponentValue};
 
@@ -64,7 +64,14 @@ impl Generatable for Key {
     }
 
     fn get_outgoing_signals(&self) -> Vec<TilSignal> {
-        let mut signals = vec![TilSignal::new(Some(self.name.clone()), "matcher_str", Some(self.matcher.get_name().to_string()), "input")];
+        let mut signals = vec![
+            TilSignal::Intermediate { 
+                source_inst_name: self.name.clone(), 
+                source_stream_name: "matcher_str".to_owned(), 
+                dest_inst_name: self.matcher.get_name().to_string(), 
+                dest_stream_name: "input".to_owned() 
+            }
+        ];
 
         // First check if there is a child
         if let Some(child) = &self.value {
@@ -78,7 +85,12 @@ impl Generatable for Key {
                 // Force the child to be generatable
                 let child =Box::<dyn Generatable>::from(child);
                 signals.push(
-                    TilSignal::new(Some(self.name.clone()), "output", Some(child.get_name().to_string()), "input")
+                    TilSignal::Intermediate { 
+                        source_inst_name: self.name.clone(), 
+                        source_stream_name: "output".to_owned(), 
+                        dest_inst_name: child.get_name().to_string(), 
+                        dest_stream_name: "input".to_owned() 
+                    }
                 );
             }
         };
