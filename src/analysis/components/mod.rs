@@ -5,7 +5,7 @@ pub enum JsonType {
     Boolean,
 }
 
-use super::{types::{TilStreamingInterface, TilSignal, TilComponent, til_component::TilImplementationType}, GeneratorParams, analyzer::type_manager::StreamType};
+use super::{types::{TilStreamingInterface, TilSignal, TilComponent, til_component::TilImplementationType}, GeneratorParams, analyzer::{type_manager::StreamType, file_manager::TemplateType}};
 
 pub trait Generatable {
     
@@ -43,9 +43,7 @@ pub trait Generatable {
         format!("{}_inst", self.get_name())
     }
 
-    fn get_file_type(&self) {
-        unimplemented!()
-    }
+    fn get_file_type(&self) -> TemplateType;
 }
 
 pub trait JsonComponentValue {

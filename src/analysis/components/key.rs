@@ -1,4 +1,4 @@
-use crate::analysis::{types::{TilStreamingInterface, TilSignal, streaming_interface::{Generic, GenericType, TilStreamDirection, TilStream}, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal, streaming_interface::{Generic, GenericType, TilStreamDirection, TilStream}, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::{type_manager::StreamType, file_manager::TemplateType}};
 
 use super::{Key, Generatable, JsonComponent, Matcher, JsonComponentValue};
 
@@ -123,6 +123,10 @@ impl Generatable for Key {
 
     fn get_name(&self) -> &str {
         &self.name
+    }
+
+    fn get_file_type(&self) -> TemplateType {
+        TemplateType::Key
     }
 }
 

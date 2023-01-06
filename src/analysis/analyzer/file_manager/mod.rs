@@ -23,12 +23,9 @@ struct TemplateInstance {
     pub component_name: String,
 }
 
-
-
-pub struct FileManager {
+pub(super) struct FileManager {
     files: Vec<TemplateInstance>,
-    matchers:
-    templates: EnumMap<TemplateType, Option<Template<'static>>>,
+    templates: EnumMap<TemplateType, Option<String>>,
 }
 
 impl FileManager {
@@ -36,11 +33,11 @@ impl FileManager {
         FileManager {
             files: Vec::new(),
             templates: enum_map! {
-                TemplateType::Array => Some(Template::from(include_str!("templates/array_parser.vhd"))),
-                TemplateType::Int => Some(Template::from(include_str!("templates/int_parser.vhd"))),
+                TemplateType::Array => Some(String::from(include_str!("templates/array_parser.vhd"))),
+                TemplateType::Int => Some(String::from(include_str!("templates/int_parser.vhd"))),
                 TemplateType::Bool => None,
-                TemplateType::Record => Some(Template::from(include_str!("templates/record_parser.vhd"))),
-                TemplateType::Key => Some(Template::from(include_str!("templates/key_parser.vhd"))),
+                TemplateType::Record => Some(String::from(include_str!("templates/record_parser.vhd"))),
+                TemplateType::Key => Some(String::from(include_str!("templates/key_parser.vhd"))),
                 TemplateType::String => None,
                 TemplateType::Matcher => None,
             },
@@ -74,15 +71,17 @@ impl FileManager {
         let template = match template_inst.template_type {
             // Matcher needs to be handled differently as it depends on the matching string
             TemplateType::Matcher => {
-                &Some(Template::from(matcher::generate_matcher(&template_inst.component_name).unwrap()))
+                Some(matcher::generate_matcher(&template_inst.component_name).unwrap())
             },
-            _ => &self.templates[template_inst.template_type]
+            _ => self.templates[template_inst.template_type].to_owned()
         };
 
-        let template = match template {
-            Some(template) => template,
+        let template_str = match template {
+            Some(template_str) => template_str,
             None => todo!("Template for {:?} not implemented", template_inst.template_type),
         };
+
+        let template = Template::from(template_str.as_str());
 
         let mut templ_values: HashMap<&str, &str> = HashMap::new();
         templ_values.insert("comp_name", &template_inst.component_name);

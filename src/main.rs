@@ -30,7 +30,7 @@ fn main() {
     let visualize = false;
 
     // Create a new generator
-    let mut generator = Generator::new(4, 8, 64);
+    let mut generator = Generator::new("schema_parser", 4, 8, 64);
 
     // Analyze the JSON string
     generator.analyze(_simple).unwrap();

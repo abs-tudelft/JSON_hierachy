@@ -1,16 +1,11 @@
 use super::{visualization, Generator, GeneratorParams, analyzer::Analyzer};
 
 impl Generator {
-    pub fn new(epc: usize, bit_width: usize, int_width: usize) -> Generator {
+    pub fn new(project_name: &str, epc: usize, bit_width: usize, int_width: usize) -> Generator {
         Generator {
             root: None,
             analyzer: Analyzer::new(),
-            gen_params: GeneratorParams {
-                epc,
-                bit_width,
-                int_width,
-                output_dir: String::from(""),
-            },
+            gen_params: GeneratorParams::new(epc, bit_width, int_width, "", project_name),
         }
     }
 
@@ -57,6 +52,9 @@ impl Generator {
         let til = self.generate_til();
 
         file.write_fmt(format_args!("{}", til)).unwrap();
+
+        // Generate the files
+        self.analyzer.generate_files(&self.gen_params.output_dir);
 
         Ok(())
     }

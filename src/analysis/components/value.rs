@@ -1,4 +1,4 @@
-use crate::analysis::{types::{TilStreamingInterface, TilSignal, streaming_interface::{Generic, GenericType, TilStreamDirection, TilStream}, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::type_manager::StreamType};
+use crate::analysis::{types::{TilStreamingInterface, TilSignal, streaming_interface::{Generic, GenericType, TilStreamDirection, TilStream}, stream_types::{StreamTypeDecl, StreamDim}}, GeneratorParams, analyzer::{type_manager::StreamType, file_manager::TemplateType}};
 
 use super::{JsonComponent, JsonType, Value, Generatable, JsonComponentValue};
 
@@ -105,6 +105,14 @@ impl Generatable for Value {
 
     fn num_outgoing_signals(&self) -> usize {
         0
+    }
+
+    fn get_file_type(&self) -> TemplateType {
+        match self.data_type {
+            JsonType::String => TemplateType::String,
+            JsonType::Integer => TemplateType::Int,
+            JsonType::Boolean => TemplateType::Bool,
+        }
     }
 }
 

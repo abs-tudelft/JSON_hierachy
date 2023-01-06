@@ -1,6 +1,6 @@
-use crate::analysis::generator::GeneratorError;
+use crate::analysis::analyzer::AnalyzerError;
 
-pub fn generate_matcher(matcher: &str) -> Result<String, GeneratorError> {
+pub fn generate_matcher(matcher: &str) -> Result<String, AnalyzerError> {
     use pyo3::prelude::*;
     
     let code = include_str!("./vhdre/vhdre/__init__.py");
@@ -15,5 +15,5 @@ pub fn generate_matcher(matcher: &str) -> Result<String, GeneratorError> {
         let vhdl: &str = regex.call_method0("__str__")?.extract::<&str>()?;
 
         Ok(String::from(vhdl))
-    }).map_err(GeneratorError::PythonError)
+    }).map_err(|e| AnalyzerError::PythonError(e.to_string()))
 }

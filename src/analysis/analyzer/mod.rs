@@ -2,12 +2,15 @@ use json::JsonValue;
 
 use crate::analysis::components::JsonComponent;
 
+use self::file_manager::FileManager;
+
 use super::{types::{TilComponent, TilSignal}, GeneratorParams, analyzer::{name_reg::NameReg, type_manager::{TypeManager, StreamType}}};
 
 mod analysis;
 mod name_reg;
 pub mod type_manager;
 pub mod top_component;
+pub mod file_manager;
 
 /**********************************************************************************
  * Set of functions to analyze the parsed JSON object into a component structure  *
@@ -18,6 +21,7 @@ pub struct Analyzer {
     name_reg: NameReg,
     type_manager: TypeManager,
     entity_list: Vec<TilComponent>,
+    file_manager: FileManager,
     gen_params: GeneratorParams,
     signal_list: Vec<TilSignal>,
     top_component: Option<JsonComponent>,
@@ -29,6 +33,7 @@ impl Analyzer {
             name_reg: NameReg::new(),
             type_manager: TypeManager::new(),
             entity_list: Vec::new(),
+            file_manager: FileManager::new(),
             gen_params: GeneratorParams::default(),
             signal_list: Vec::new(),
             top_component: None,
@@ -48,9 +53,14 @@ impl Analyzer {
         
         (stream_types, til_components)
     }
+
+    pub fn generate_files(&self, output_dir: &str) {
+        self.file_manager.generate_files(output_dir, &self.gen_params);
+    }
 }
 
 #[derive(Debug)]
 pub enum AnalyzerError {
     NoTop,
+    PythonError(String),
 }
