@@ -1,13 +1,12 @@
 use std::{fs::File, collections::HashMap, io::Write};
 
-use enum_map::{EnumMap, Enum, enum_map};
 use text_template::Template;
 
 mod matcher;
 
 use crate::analysis::GeneratorParams;
 
-#[derive(Enum, Clone, Copy, Debug)]
+#[derive(Clone,Debug)]
 pub enum TemplateType {
     Array,
     Int,
@@ -15,7 +14,21 @@ pub enum TemplateType {
     Record,
     Key,
     String,
-    Matcher
+    Matcher(String)
+}
+
+impl TemplateType {
+    pub fn get_template(&self) -> Option<String> {
+        match self {
+            TemplateType::Array => Some(String::from(include_str!("templates/array_parser.vhd"))),
+            TemplateType::Int => Some(String::from(include_str!("templates/int_parser.vhd"))),
+            TemplateType::Bool => None,
+            TemplateType::Record => Some(String::from(include_str!("templates/record_parser.vhd"))),
+            TemplateType::Key => Some(String::from(include_str!("templates/key_parser.vhd"))),
+            TemplateType::String => None,
+            TemplateType::Matcher(_) => None,
+        }
+    }
 }
 
 struct TemplateInstance {
@@ -25,22 +38,12 @@ struct TemplateInstance {
 
 pub(super) struct FileManager {
     files: Vec<TemplateInstance>,
-    templates: EnumMap<TemplateType, Option<String>>,
 }
 
 impl FileManager {
     pub fn new() -> Self {
         FileManager {
             files: Vec::new(),
-            templates: enum_map! {
-                TemplateType::Array => Some(String::from(include_str!("templates/array_parser.vhd"))),
-                TemplateType::Int => Some(String::from(include_str!("templates/int_parser.vhd"))),
-                TemplateType::Bool => None,
-                TemplateType::Record => Some(String::from(include_str!("templates/record_parser.vhd"))),
-                TemplateType::Key => Some(String::from(include_str!("templates/key_parser.vhd"))),
-                TemplateType::String => None,
-                TemplateType::Matcher => None,
-            },
         }
     }
 
@@ -67,32 +70,36 @@ impl FileManager {
     }
 
     fn file_from_template(&self, template_inst: &TemplateInstance, gen_params: &GeneratorParams) -> String {
-        // Get the template
-        let template = match template_inst.template_type {
-            // Matcher needs to be handled differently as it depends on the matching string
-            TemplateType::Matcher => {
-                Some(matcher::generate_matcher(&template_inst.component_name).unwrap())
+        match template_inst.template_type {
+            // Matcher needs to be handled differently as the python script fills in the template
+            TemplateType::Matcher(ref matcher_str) => {
+                matcher::generate_matcher(matcher_str, &format!("{}_0_{}_com", gen_params.comp_namespace, template_inst.component_name), &gen_params.project_name).unwrap()
             },
-            _ => self.templates[template_inst.template_type].to_owned()
-        };
+            _ => {
+                // Get the template
+                let template = template_inst.template_type.get_template();
 
-        let template_str = match template {
-            Some(template_str) => template_str,
-            None => todo!("Template for {:?} not implemented", template_inst.template_type),
-        };
+                // Check if a template exists
+                let template_str = match template {
+                    Some(template_str) => template_str,
+                    None => todo!("Template for {:?} not implemented", template_inst.template_type),
+                };
+        
+                // Convert to template struct
+                let template = Template::from(template_str.as_str());
+        
+                // Create map of values to fill in
+                let mut templ_values: HashMap<&str, &str> = HashMap::new();
+                templ_values.insert("comp_name", &template_inst.component_name);
+                let bit_width = gen_params.bit_width.to_string();
+                templ_values.insert("bit_width", &bit_width);
+                templ_values.insert("namespace", &gen_params.comp_namespace);
+                templ_values.insert("project_name", &gen_params.project_name);
 
-        let template = Template::from(template_str.as_str());
-
-        let mut templ_values: HashMap<&str, &str> = HashMap::new();
-        templ_values.insert("comp_name", &template_inst.component_name);
-        let bit_width = gen_params.bit_width.to_string();
-        templ_values.insert("bit_width", &bit_width);
-        templ_values.insert("namespace", &gen_params.comp_namespace);
-        templ_values.insert("project_name", &gen_params.project_name);
-    
-        let text = template.fill_in(&templ_values).to_string();
-    
-        text
+                // Fill in the template
+                template.fill_in(&templ_values).to_string()
+            },
+        }
     }
 }
 

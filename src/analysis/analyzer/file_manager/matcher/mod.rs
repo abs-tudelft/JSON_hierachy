@@ -1,6 +1,6 @@
 use crate::analysis::analyzer::AnalyzerError;
 
-pub fn generate_matcher(matcher: &str) -> Result<String, AnalyzerError> {
+pub fn generate_matcher(matcher: &str, comp_name: &str, project_name: &str) -> Result<String, AnalyzerError> {
     use pyo3::prelude::*;
     
     let code = include_str!("./vhdre/vhdre/__init__.py");
@@ -10,7 +10,7 @@ pub fn generate_matcher(matcher: &str) -> Result<String, AnalyzerError> {
         let vhdre = PyModule::from_code(py, code, "vhdre/__init__.py", "vhdre")?;
 
         let regex_class = vhdre.getattr("RegexMatcher")?;
-        let regex = regex_class.call1((format!("{}_matcher", matcher), matcher))?;
+        let regex = regex_class.call1((comp_name, project_name, matcher))?;
 
         let vhdl: &str = regex.call_method0("__str__")?.extract::<&str>()?;
 

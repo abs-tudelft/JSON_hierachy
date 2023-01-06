@@ -70,7 +70,7 @@ impl Generatable for Matcher {
     }
 
     fn get_file_type(&self) -> TemplateType {
-        TemplateType::Matcher
+        TemplateType::Matcher(self.matcher.clone())
     }
 }
 
