@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use super::{visualization, Generator, GeneratorParams, analyzer::Analyzer};
 
 impl Generator {
@@ -35,17 +37,15 @@ impl Generator {
     }
 
     pub fn generate(&mut self, path: &str) -> Result<(), GeneratorError> {
-        // Separate output path into directory and file name
-        let (dir, _) = path.split_at(path.rfind('/').unwrap_or(0));
-
         // Set the output directory
-        self.gen_params.output_dir = String::from(dir);
+        self.gen_params.output_dir = format!("{}/{}", path, self.gen_params.project_name);
+        let proj_dir = &self.gen_params.output_dir;
 
         // Create the directory if it doesn't exist
-        std::fs::create_dir_all(dir).unwrap();
+        std::fs::create_dir_all(format!("{}/src", proj_dir)).unwrap();
 
         // Create the file
-        let mut file = std::fs::File::create(path).unwrap();
+        let mut file = std::fs::File::create(format!("{}/src/{}.til", proj_dir, self.gen_params.project_name)).unwrap();
 
         use std::io::Write;
 

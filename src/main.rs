@@ -44,5 +44,5 @@ fn main() {
     // generator.vhdl("output/schema.vhdl").unwrap();
 
     // Generate TIL code
-    generator.generate("output/schema.til").unwrap();
+    generator.generate("output").unwrap();
 }
