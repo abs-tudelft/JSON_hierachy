@@ -16,16 +16,15 @@ impl Generatable for Value {
     fn get_streaming_interface(&self, gen_params: &GeneratorParams) -> TilStreamingInterface {
         let mut interface = TilStreamingInterface::default();
         interface.add_generic(Generic::new("EPC", GenericType::Positive(gen_params.epc)));
-        let dim_name = "DIM";
-        let dim = self.outer_nested + 1;
-        interface.add_generic(Generic::new(dim_name, GenericType::Dimensionality(dim)));
-        interface.add_generic(Generic::new("NESTING_LEVEL", GenericType::Positive(self.outer_nested)));
+        let dim_name = "NESTING_LEVEL";
+        // let dim = self.outer_nested + 1;
+        interface.add_generic(Generic::new(dim_name, GenericType::Dimensionality(self.outer_nested)));
 
         // Input type
         interface.add_stream("input", TilStreamDirection::Input,
             StreamTypeDecl::new(
                 StreamType::Json,
-                Some(StreamDim::new(Some(dim_name.to_string()), dim, 0))
+                Some(StreamDim::new(Some(dim_name.to_string()), self.outer_nested, 1))
             )
         );
 
@@ -35,7 +34,7 @@ impl Generatable for Value {
                 interface.add_stream("output", TilStreamDirection::Output,
                     StreamTypeDecl::new(
                         StreamType::Json, 
-                        Some(StreamDim::new(Some(dim_name.to_string()),  dim, 0))
+                        Some(StreamDim::new(Some(dim_name.to_string()),  self.outer_nested, 1))
                     )
                 );
 
@@ -48,7 +47,7 @@ impl Generatable for Value {
                 interface.add_stream("output", TilStreamDirection::Output,
                     StreamTypeDecl::new(
                         StreamType::Int, 
-                        Some(StreamDim::new(Some(dim_name.to_string()),  dim, -1))
+                        Some(StreamDim::new(Some(dim_name.to_string()),  self.outer_nested, 0))
                     )
                 );
 
@@ -59,7 +58,7 @@ impl Generatable for Value {
                 interface.add_stream("output", TilStreamDirection::Output,
                     StreamTypeDecl::new(
                         StreamType::Bool,
-                        Some(StreamDim::new(Some(dim_name.to_string()),  dim, -1))
+                        Some(StreamDim::new(Some(dim_name.to_string()),  self.outer_nested, 0))
                     )
                 );
 

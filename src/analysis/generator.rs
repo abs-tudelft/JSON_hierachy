@@ -39,6 +39,12 @@ impl Generator {
         self.gen_params.output_dir = format!("{}/{}", path, self.gen_params.project_name);
         let proj_dir = &self.gen_params.output_dir;
 
+        // Check if directory exists
+        if std::path::Path::new(proj_dir).exists() {
+            // If it does, delete it
+            std::fs::remove_dir_all(proj_dir).unwrap();
+        }
+
         // Create the directory if it doesn't exist
         std::fs::create_dir_all(format!("{}/src", proj_dir)).unwrap();
 

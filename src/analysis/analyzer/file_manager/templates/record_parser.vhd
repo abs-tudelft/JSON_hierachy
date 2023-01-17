@@ -10,7 +10,6 @@ use work.UtilInt_pkg.all;
 entity ${namespace}_0_${comp_name}_com is
   generic (
     EPC : positive := 4;
-    DIM : positive := 2;
     OUTER_NESTING_LEVEL : positive := 1;
     INNER_NESTING_LEVEL : natural := 1;
     END_REQ_EN : boolean := false
@@ -21,14 +20,14 @@ entity ${namespace}_0_${comp_name}_com is
     input_valid : in std_logic;
     input_ready : out std_logic;
     input_data : in std_logic_vector(EPC*${bit_width}-1 downto 0);
-    input_last : in std_logic_vector((DIM * EPC) - 1 downto 0);
+    input_last : in std_logic_vector(((OUTER_NESTING_LEVEL + 1) * EPC) - 1 downto 0);
     input_stai : in std_logic_vector(log2ceil(EPC)-1 downto 0);
     input_endi : in std_logic_vector(log2ceil(EPC)-1 downto 0);
     input_strb : in std_logic_vector(EPC-1 downto 0);
     output_valid : out std_logic;
     output_ready : in std_logic;
     output_data : out std_logic_vector(EPC*${bit_width}+EPC-1 downto 0);
-    output_last : out std_logic_vector(((DIM + 1) * EPC) - 1 downto 0);
+    output_last : out std_logic_vector(((OUTER_NESTING_LEVEL + 2) * EPC) - 1 downto 0);
     output_stai : out std_logic_vector(log2ceil(EPC)-1 downto 0);
     output_endi : out std_logic_vector(log2ceil(EPC)-1 downto 0);
     output_strb : out std_logic_vector(EPC-1 downto 0)

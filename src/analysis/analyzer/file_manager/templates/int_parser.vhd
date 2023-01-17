@@ -10,7 +10,6 @@ use work.UtilInt_pkg.all;
 entity ${namespace}_0_${comp_name}_com is
   generic (
     EPC : positive := 4;
-    DIM : positive := 4;
     NESTING_LEVEL : positive := 3;
     BITWIDTH : positive := 64;
     PIPELINE_STAGES : natural := 1
@@ -21,14 +20,14 @@ entity ${namespace}_0_${comp_name}_com is
     input_valid : in std_logic;
     input_ready : out std_logic;
     input_data : in std_logic_vector(EPC*${bit_width} downto 0);
-    input_last : in std_logic_vector((DIM * EPC) - 1 downto 0);
+    input_last : in std_logic_vector(((NESTING_LEVEL + 1) * EPC) - 1 downto 0);
     input_stai : in std_logic_vector(log2ceil(EPC)-1 downto 0);
     input_endi : in std_logic_vector(log2ceil(EPC)-1 downto 0);
     input_strb : in std_logic_vector(EPC-1 downto 0);
     output_valid : out std_logic;
     output_ready : in std_logic;
     output_data : out std_logic_vector(${int_width}-1 downto 0);
-    output_last : out std_logic_vector((DIM - 1) - 1 downto 0);
+    output_last : out std_logic_vector(NESTING_LEVEL - 1 downto 0);
     output_strb : out std_logic
   );
 end ${namespace}_0_${comp_name}_com;
