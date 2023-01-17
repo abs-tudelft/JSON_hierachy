@@ -36,7 +36,7 @@ struct TemplateInstance {
     pub component_name: String,
 }
 
-pub(super) struct FileManager {
+pub struct FileManager {
     files: Vec<TemplateInstance>,
 }
 
@@ -52,6 +52,20 @@ impl FileManager {
             template_type,
             component_name: component_name.to_owned(),
         });
+    }
+
+    pub fn generate_toml(&self, output_path: &str, gen_params: &GeneratorParams) {
+        // Generate the files
+        let file_name = format!("{}/project.toml", output_path);
+        let mut file = File::create(file_name).unwrap();
+
+        let template = Template::from(include_str!("templates/toml_template.toml")); 
+
+        let mut templ_values: HashMap<&str, &str> = HashMap::new();
+        templ_values.insert("project_name", &gen_params.project_name);
+
+        let text = template.fill_in(&templ_values).to_string();
+        file.write_all(text.as_bytes()).unwrap();
     }
 
     pub fn generate_files(&self, output_path: &str, gen_params: &GeneratorParams) {

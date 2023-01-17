@@ -54,8 +54,8 @@ impl Analyzer {
         (stream_types, til_components)
     }
 
-    pub fn generate_files(&self, output_dir: &str) {
-        self.file_manager.generate_files(output_dir, &self.gen_params);
+    pub fn get_file_manager(&self) -> &FileManager {
+        &self.file_manager
     }
 }
 

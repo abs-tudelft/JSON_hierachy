@@ -58,7 +58,10 @@ impl Generator {
         file.write_fmt(format_args!("{}", til)).unwrap();
 
         // Generate the files
-        self.analyzer.generate_files(&self.gen_params.output_dir);
+        let file_manager = self.analyzer.get_file_manager();
+        file_manager.generate_files(&self.gen_params.output_dir, &self.gen_params);
+
+        file_manager.generate_toml(&self.gen_params.output_dir, &self.gen_params);
 
         Ok(())
     }

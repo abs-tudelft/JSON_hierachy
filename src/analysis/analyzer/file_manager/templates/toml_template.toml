@@ -1,0 +1,5 @@
+name = "${project_name}"
+
+files = [ "src/${project_name}.til" ]
+
+output_path = "output"
