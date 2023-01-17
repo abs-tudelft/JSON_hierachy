@@ -1,5 +1,3 @@
-use std::fmt::format;
-
 use super::{visualization, Generator, GeneratorParams, analyzer::Analyzer};
 
 impl Generator {
