@@ -27,7 +27,7 @@ fn main() {
     }
     "#;
 
-    let visualize = false;
+    let visualize = true;
 
     // Create a new generator
     let mut generator = Generator::new("schema_parser", 4, 8, 64);
@@ -39,9 +39,6 @@ fn main() {
         // Visualize the JSON string
         generator.visualize("output/schema.dot").unwrap();
     }
-
-    // Generate VHDL code
-    // generator.vhdl("output/schema.vhdl").unwrap();
 
     // Generate TIL code
     generator.generate("output").unwrap();

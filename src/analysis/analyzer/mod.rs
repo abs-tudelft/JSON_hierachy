@@ -47,6 +47,13 @@ impl Analyzer {
         self.top_component = root_component;
     }
 
+    pub fn get_root(&self) -> Result<&JsonComponent, AnalyzerError> {
+        match self.top_component {
+            Some(ref top) => Ok(top),
+            None => Err(AnalyzerError::NoTop),
+        }
+    }
+
     pub fn get_definitions(&self) -> (Vec<StreamType>, &Vec<TilComponent>) {   
         let stream_types = self.type_manager.get_stream_types();
         let til_components = &self.entity_list;

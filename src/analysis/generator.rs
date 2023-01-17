@@ -1,9 +1,8 @@
-use super::{visualization, Generator, GeneratorParams, analyzer::Analyzer};
+use super::{visualization, Generator, GeneratorParams, analyzer::Analyzer, GeneratorError};
 
 impl Generator {
     pub fn new(project_name: &str, epc: usize, bit_width: usize, int_width: usize) -> Generator {
         Generator {
-            root: None,
             analyzer: Analyzer::new(),
             gen_params: GeneratorParams::new(epc, bit_width, int_width, "", project_name),
         }
@@ -23,12 +22,14 @@ impl Generator {
 
     // Visualize the component tree as a dot file
     pub fn visualize(&self, path: &str) -> Result<(), GeneratorError> {
+        let root = self.analyzer.get_root();
+
         // Check if the root exists
-        match &self.root {
-            Some(root) => {
+        match root {
+            Ok(root) => {
                 visualization::generate_dot(root, path)
             },
-            None => return Err(GeneratorError::NoRoot),
+            Err(_) => return Err(GeneratorError::NoRoot),
         }
 
         Ok(())
@@ -65,10 +66,4 @@ impl Generator {
 
         Ok(())
     }
-}
-
-#[derive(Debug)]
-pub enum GeneratorError {
-    JsonError(json::JsonError),
-    NoRoot,
 }

@@ -10,7 +10,6 @@ mod til;
 
 
 pub struct Generator {
-    root: Option<JsonComponent>,
     analyzer: Analyzer,
     gen_params: GeneratorParams,
 }
@@ -98,4 +97,5 @@ fn namespace_from_project_name(project_name: &str) -> (String, String) {
 pub enum GeneratorError {
     NoRoot,
     InvalidProjectName,
+    JsonError(json::JsonError),
 }
