@@ -33,7 +33,7 @@ fn main() {
     let mut generator = Generator::new("schema_parser", 4, 8, 64);
 
     // Analyze the JSON string
-    generator.analyze(_simple).unwrap();
+    generator.analyze(_multiple_keys).unwrap();
     
     if visualize {
         // Visualize the JSON string

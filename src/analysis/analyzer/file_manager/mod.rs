@@ -22,10 +22,10 @@ impl TemplateType {
         match self {
             TemplateType::Array => Some(String::from(include_str!("templates/array_parser.vhd"))),
             TemplateType::Int => Some(String::from(include_str!("templates/int_parser.vhd"))),
-            TemplateType::Bool => None,
+            TemplateType::Bool => Some(String::from(include_str!("templates/bool_parser.vhd"))),
             TemplateType::Record => Some(String::from(include_str!("templates/record_parser.vhd"))),
             TemplateType::Key => Some(String::from(include_str!("templates/key_parser.vhd"))),
-            TemplateType::String => None,
+            TemplateType::String => Some(String::from(include_str!("templates/string_parser.vhd"))),
             TemplateType::Matcher(_) => None,
         }
     }

@@ -7,30 +7,45 @@ library work;
 use work.${project_name}.all;
 use work.UtilInt_pkg.all;
 
+
 entity ${namespace}_0_${comp_name}_com is
   generic (
-    EPC : positive := 4;
-    OUTER_NESTING_LEVEL : positive := 2;
-    INNER_NESTING_LEVEL : natural := 0;
-    ELEMENT_COUNTER_BW : natural := 4
-  );
+      EPC                    : positive := 1;
+      NESTING_LEVEL          : positive := 1
+      );
   port (
-    clk : in std_logic;
-    rst : in std_logic;
-    input_valid : in std_logic;
-    input_ready : out std_logic;
-    input_data : in std_logic_vector(EPC*${bit_width}-1 downto 0);
-    input_last : in std_logic_vector(((OUTER_NESTING_LEVEL + 1) * EPC) - 1 downto 0);
-    input_stai : in std_logic_vector(log2ceil(EPC)-1 downto 0);
-    input_endi : in std_logic_vector(log2ceil(EPC)-1 downto 0);
-    input_strb : in std_logic_vector(EPC-1 downto 0);
-    output_valid : out std_logic;
-    output_ready : in std_logic;
-    output_data : out std_logic_vector(EPC*${bit_width}-1 downto 0);
-    output_last : out std_logic_vector(((OUTER_NESTING_LEVEL + 2) * EPC) - 1 downto 0);
-    output_stai : out std_logic_vector(log2ceil(EPC)-1 downto 0);
-    output_endi : out std_logic_vector(log2ceil(EPC)-1 downto 0);
-    output_strb : out std_logic_vector(EPC-1 downto 0)
+      clk                   : in  std_logic;
+      rst                   : in  std_logic;
+
+      -- Stream(
+      --     Bits(8),
+      --     t=EPC,
+      --     d=NESTING_LEVEL,
+      --     c=8
+      -- )
+      input_valid              : in  std_logic;
+      input_ready              : out std_logic;
+      input_data               : in  std_logic_vector(8*EPC-1 downto 0);
+      input_last               : in  std_logic_vector((NESTING_LEVEL+1)*EPC-1 downto 0) := (others => '0');
+      input_stai               : in  std_logic_vector(log2ceil(EPC)-1 downto 0) := (others => '0');
+      input_endi               : in  std_logic_vector(log2ceil(EPC)-1 downto 0) := (others => '1');
+      input_strb               : in  std_logic_vector(EPC-1 downto 0) := (others => '1');
+
+      -- Stream(
+      --     Bits(8),
+      --     t=EPC,
+      --     d=NESTING_LEVEL,
+      --     c=8
+      -- )
+      --
+      output_valid             : out std_logic;
+      output_ready             : in  std_logic;
+      output_data              : out std_logic_vector(8*EPC-1 downto 0);
+      output_last              : out std_logic_vector((NESTING_LEVEL+1)*EPC-1 downto 0) := (others => '0');
+      output_stai              : out std_logic_vector(log2ceil(EPC)-1 downto 0) := (others => '0');
+      output_endi              : oOutputut std_logic_vector(log2ceil(EPC)-1 downto 0) := (others => '1');
+      output_strb              : out std_logic_vector(EPC-1 downto 0) := (others => '1')
+
   );
 end ${namespace}_0_${comp_name}_com;
 
@@ -42,7 +57,7 @@ begin
     -- Input holding register.
     type in_type is record
       data  : std_logic_vector(7 downto 0);
-      last  : std_logic_vector(OUTER_NESTING_LEVEL-1 downto 0);
+      last  : std_logic_vector(NESTING_LEVEL-1 downto 0);
       strb  : std_logic;
     end record;
 
@@ -54,7 +69,7 @@ begin
     -- Output holding register.
     type out_type is record
       data  : std_logic_vector(7 downto 0);
-      last  : std_logic_vector(OUTER_NESTING_LEVEL+1 downto 0);
+      last  : std_logic_vector(NESTING_LEVEL downto 0);
       strb  : std_logic;
     end record;
 
@@ -68,15 +83,10 @@ begin
 
     -- Enumeration type for our state machine.
     type state_t is (STATE_IDLE,
-                     STATE_ARRAY);
+                     STATE_STRING);
 
     -- State variable
     variable state : state_t;
-
-    variable nesting_level_th : std_logic_vector(INNER_NESTING_LEVEL downto 0) := (others => '0');
-    variable nesting_inner    : std_logic_vector(INNER_NESTING_LEVEL downto 1) := (others => '0');
-
-    variable is_top_array     : std_logic;
 
   begin
     if rising_edge(clk) then
@@ -88,7 +98,7 @@ begin
         endi      := to_unsigned(EPC-1, endi'length);
         for idx in 0 to EPC-1 loop
           id(idx).data := input_data(8*idx+7 downto 8*idx);
-          id(idx).last := input_last((OUTER_NESTING_LEVEL+1)*(idx+1)-1 downto (OUTER_NESTING_LEVEL+1)*idx+1);
+          id(idx).last := input_last((NESTING_LEVEL+1)*(idx+1)-1 downto (NESTING_LEVEL+1)*idx+1);
           if idx < unsigned(input_stai) then
             id(idx).strb := '0';
           elsif idx > unsigned(input_endi) then
@@ -110,64 +120,31 @@ begin
 
           -- Default behavior.
           od(idx).data       := id(idx).data;
-          od(idx).last(OUTER_NESTING_LEVEL+1 downto 0)   := id(idx).last & "00";
+          od(idx).last(NESTING_LEVEL downto 0)   := id(idx).last & "0";
           od(idx).strb       := '0';
           
           -- Element-wise processing only when the lane is valid.
           if to_x01(id(idx).strb) = '1' then
 
-
-            -- Keep track of nesting.
-            case id(idx).data is
-              when X"7B" => -- '{'
-                nesting_level_th := nesting_level_th(nesting_level_th'high-1 downto 0) & '1';
-              when X"5B" => -- '['
-                nesting_level_th := nesting_level_th(nesting_level_th'high-1 downto 0) & '1';
-              when X"7D" => -- '}'
-                nesting_level_th := '0' &nesting_level_th(nesting_level_th'high downto 1);
-              when X"5D" => -- ']'
-                nesting_level_th := '0' &nesting_level_th(nesting_level_th'high downto 1);
-              when others =>
-                nesting_level_th := nesting_level_th;
-            end case;
-
-            nesting_inner := nesting_level_th(nesting_level_th'high downto 1);
-            is_top_array  := nesting_level_th(0);
-
             case state is
               when STATE_IDLE =>
                 case id(idx).data is
-                  when X"5B" => -- '['
-                    state := STATE_ARRAY;
+                  when X"22" => -- '"'
+                    state := STATE_STRING;
                   when others =>
                     state := STATE_IDLE;
                 end case;
 
-              when STATE_ARRAY =>
+              when STATE_STRING =>
                 od(idx).strb := '1';
                 ov           := '1';
                 case id(idx).data is
-                  when X"5D" => -- ']'
-                    if or_reduce(nesting_inner) = '0' then
-                      -- Keep processing values if we are still in an inner array.
-                      if is_top_array = '1' then
-                        state := STATE_ARRAY;
-                      else
-                        state := STATE_IDLE;
-                        od(idx).last(0) := '1';
-                        od(idx).last(1) := '1';
-        
-                        od(idx).strb   := '0';
-                      end if;
-                    end if;
-                  when X"2C" => -- ','
-                    if or_reduce(nesting_inner) = '0' then
-                      state := STATE_ARRAY;
-                      od(idx).last(0) := '1';
-                      od(idx).strb   := '0';
-                    end if;
+                  when X"22" => -- '"'
+                    state := STATE_IDLE;
+                    od(idx).last(0) := '1';
+                    od(idx).strb   := '0';
                   when others =>
-                    state := STATE_ARRAY;
+                    state := STATE_STRING;
                 end case;
             end case;
           end if;
@@ -177,7 +154,6 @@ begin
             state := STATE_IDLE;
           end if;
         end loop;
-
         for idx in 0 to EPC-1 loop
           if or_reduce(od(idx).last) = '1' then
             ov := '1';
@@ -186,7 +162,7 @@ begin
         iv := '0';
       end if;
 
-      -- Handle reset.
+      -- Handle rst.
       if to_x01(rst) /= '0' then
         iv    := '0';
         ov    := '0';
@@ -199,11 +175,11 @@ begin
       input_ready <= ir and not rst;
       for idx in 0 to EPC-1 loop
         output_data(8*idx+7 downto 8*idx) <= od(idx).data;
-        output_last((OUTER_NESTING_LEVEL+2)*(idx+1)-1 downto (OUTER_NESTING_LEVEL+2)*idx) <= od(idx).last;
+        output_last((NESTING_LEVEL+1)*(idx+1)-1 downto (NESTING_LEVEL+1)*idx) <= od(idx).last;
         output_stai <= std_logic_vector(stai);
         output_endi <= std_logic_vector(endi);
         output_strb(idx) <= od(idx).strb;
       end loop;
     end if;
   end process;
-end behav;
+end architecture;
