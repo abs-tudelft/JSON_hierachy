@@ -2,11 +2,11 @@ use std::fmt::{Display, Formatter};
 
 use indoc::{formatdoc, writedoc};
 
-use super::{TilComponent, TilStreamingInterface, TilSignal};
+use super::{TilStreamlets, TilStreamingInterface, TilSignal};
 
-impl TilComponent {
-    pub fn new(name: &str) -> TilComponent {
-        TilComponent {
+impl TilStreamlets {
+    pub fn new(name: &str) -> TilStreamlets {
+        TilStreamlets {
             name: String::from(name),
             streams: TilStreamingInterface::default(),
             implementation: None,
@@ -38,7 +38,7 @@ impl TilComponent {
     }
 }
 
-impl Display for TilComponent {
+impl Display for TilStreamlets {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut comp_def = String::new();
         let mut generics = String::new();

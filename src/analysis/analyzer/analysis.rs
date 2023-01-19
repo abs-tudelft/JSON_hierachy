@@ -11,19 +11,16 @@ impl Analyzer {
     pub fn analyze_record(&mut self, key: &str, element: &JsonValue, outer_nesting: usize, inner_nesting: usize) -> (Option<Key>, usize) {
         let (child, new_inner_nesting) = self.analyze_element(element, outer_nesting + 1, inner_nesting);
 
-        // let record_name = self.name_reg.register("record_parser", outer_nesting + 1);
         let key_name = self.name_reg.register("key_parser", outer_nesting + 2);
         let matcher_name = self.name_reg.register(&format!("{}_matcher", key), outer_nesting + 2);
 
         // Create a components
         let matcher = Matcher::new(&matcher_name, &key_name, key.to_string(), outer_nesting + 2);
         let key = Key::new(&key_name, matcher.clone(), outer_nesting + 2, child.map(Box::new));
-        // let record = Record::new(&record_name, outer_nesting + 1, new_inner_nesting, key.clone());
         
         // Convert to TilComponent
-        let matcher_component = matcher.to_til_component(&self.gen_params);
-        let key_component = key.to_til_component(&self.gen_params);
-        // let record_component = record.to_til_component(&self.gen_params);
+        let matcher_component = matcher.to_til_streamlet(&self.gen_params);
+        let key_component = key.to_til_streamlet(&self.gen_params);
 
         // Add components to entity list
         self.entity_list.push(matcher_component);
@@ -167,11 +164,11 @@ impl Analyzer {
             // Check if the component is generatable
             let gen_component = component.get_generatable();
 
-            // Convert to TilComponent
-            let til_component = gen_component.to_til_component(&self.gen_params);
+            // Convert to TilStreamlet
+            let til_streamlet = gen_component.to_til_streamlet(&self.gen_params);
 
             // Add components to entity list
-            self.entity_list.push(til_component);
+            self.entity_list.push(til_streamlet);
 
             // Register types
             self.type_manager.register_from_component(gen_component);

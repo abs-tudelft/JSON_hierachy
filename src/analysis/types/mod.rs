@@ -1,12 +1,12 @@
-use self::{streaming_interface::{TilStream, Generic}, til_component::TilImplementationType};
+use self::{streaming_interface::{TilStream, Generic}, til_streamlets::TilImplementationType};
 
 pub mod stream_types;
 pub mod signals;
 pub mod streaming_interface;
-pub mod til_component;
+pub mod til_streamlets;
 
 #[derive(Clone)]
-pub struct TilComponent {
+pub struct TilStreamlets {
     name: String,
     streams: TilStreamingInterface,
     implementation: Option<TilImplementationType>,
