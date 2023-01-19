@@ -1,10 +1,10 @@
-use crate::analysis::types::{TilStreamlets, streaming_interface::TilStreamDirection, stream_types::{StreamTypeDecl, StreamDim}, TilSignal, til_streamlets::{TilInlineImplementation, TilImplementationType}};
+use crate::analysis::types::{TilStreamlet, streaming_interface::TilStreamDirection, stream_types::{StreamTypeDecl, StreamDim}, TilSignal, til_streamlet::{TilInlineImplementation, TilImplementationType}};
 
 use super::{Analyzer, AnalyzerError, type_manager::StreamType};
 
 impl Analyzer {
-    pub fn assemble_top_component(&mut self) -> Result<TilStreamlets, AnalyzerError> {
-        let mut top_component = TilStreamlets::new("top");
+    pub fn assemble_top_component(&mut self) -> Result<TilStreamlet, AnalyzerError> {
+        let mut top_component = TilStreamlet::new("top");
         
         let input_stream_name = "input";
         top_component.get_streams_mut().add_stream(input_stream_name, TilStreamDirection::Input, 

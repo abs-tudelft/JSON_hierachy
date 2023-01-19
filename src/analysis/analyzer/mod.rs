@@ -4,7 +4,7 @@ use crate::analysis::components::JsonComponent;
 
 use self::file_manager::FileManager;
 
-use super::{types::{TilStreamlets, TilSignal}, GeneratorParams, analyzer::{name_reg::NameReg, type_manager::{TypeManager, StreamType}}};
+use super::{types::{TilStreamlet, TilSignal}, GeneratorParams, analyzer::{name_reg::NameReg, type_manager::{TypeManager, StreamType}}};
 
 mod analysis;
 mod name_reg;
@@ -20,7 +20,7 @@ pub mod file_manager;
 pub struct Analyzer {
     name_reg: NameReg,
     type_manager: TypeManager,
-    entity_list: Vec<TilStreamlets>,
+    entity_list: Vec<TilStreamlet>,
     file_manager: FileManager,
     gen_params: GeneratorParams,
     signal_list: Vec<TilSignal>,
@@ -54,7 +54,7 @@ impl Analyzer {
         }
     }
 
-    pub fn get_definitions(&self) -> (Vec<StreamType>, &Vec<TilStreamlets>) {   
+    pub fn get_definitions(&self) -> (Vec<StreamType>, &Vec<TilStreamlet>) {   
         let stream_types = self.type_manager.get_stream_types();
         let til_components = &self.entity_list;
         

@@ -5,7 +5,7 @@ pub enum JsonType {
     Boolean,
 }
 
-use super::{types::{TilStreamingInterface, TilSignal, TilStreamlets, til_streamlets::TilImplementationType}, GeneratorParams, analyzer::{type_manager::StreamType, file_manager::TemplateType}};
+use super::{types::{TilStreamingInterface, TilSignal, TilStreamlet, til_streamlet::TilImplementationType}, GeneratorParams, analyzer::{type_manager::StreamType, file_manager::TemplateType}};
 
 pub trait Generatable {
     
@@ -23,9 +23,9 @@ pub trait Generatable {
     fn get_nesting_level(&self) -> usize;
     fn get_name(&self) -> &str;
 
-    fn to_til_streamlet(&self, gen_params: &GeneratorParams) -> TilStreamlets {
+    fn to_til_streamlet(&self, gen_params: &GeneratorParams) -> TilStreamlet {
         // Create a new component
-        let mut entity = TilStreamlets::new(self.get_name());
+        let mut entity = TilStreamlet::new(self.get_name());
 
         // Generate streaming interface
         let streaming_interface = self.get_streaming_interface(gen_params);
