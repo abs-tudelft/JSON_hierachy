@@ -50,14 +50,13 @@ pub trait JsonComponentValue {
     fn get_children(&self) -> Vec<JsonComponent>;
     fn num_children(&self) -> usize;
 
-    fn to_graph_node(&self) -> Option<String>;
+    fn to_graph_node(&self) -> String;
 }
 
 #[derive(Clone)]
 pub enum JsonComponent {
     Value(Value),
     Array(Array),
-    Object(Object),
     Record(Record),
     Key(Key),
     Matcher(Matcher),
@@ -80,19 +79,13 @@ pub struct Array {
     value: Option<Box<JsonComponent>>
 }
 
-mod object;
-#[derive(Clone)]
-pub struct Object {
-    records: Vec<Record>
-}
-
 mod record;
 #[derive(Clone)]
 pub struct Record {
     name: String,
     outer_nested: usize,
     inner_nested: usize,
-    key: Key
+    keys: Vec<Key>
 }
 
 mod key;
@@ -114,14 +107,13 @@ pub struct Matcher {
 }
 
 impl JsonComponent {
-    pub fn get_if_generatable(&self) -> Option<&dyn Generatable> {
+    pub fn get_generatable(&self) -> &dyn Generatable {
         match self {
-            JsonComponent::Value(value) => Some(value),
-            JsonComponent::Array(array) => Some(array),
-            JsonComponent::Object(_) => None,
-            JsonComponent::Record(record) => Some(record),
-            JsonComponent::Key(key) => Some(key),
-            JsonComponent::Matcher(matcher) => Some(matcher)
+            JsonComponent::Value(value) => value,
+            JsonComponent::Array(array) => array,
+            JsonComponent::Record(record) => record,
+            JsonComponent::Key(key) => key,
+            JsonComponent::Matcher(matcher) => matcher
         }
     }
 }
@@ -132,7 +124,6 @@ impl JsonComponentValue for JsonComponent {
         match self {
             JsonComponent::Value(value) => value.get_children(),
             JsonComponent::Array(array) => array.get_children(),
-            JsonComponent::Object(object) => object.get_children(),
             JsonComponent::Record(record) => record.get_children(),
             JsonComponent::Key(key) => key.get_children(),
             JsonComponent::Matcher(matcher) => matcher.get_children()
@@ -143,18 +134,16 @@ impl JsonComponentValue for JsonComponent {
         match self {
             JsonComponent::Value(value) => value.num_children(),
             JsonComponent::Array(array) => array.num_children(),
-            JsonComponent::Object(object) => object.num_children(),
             JsonComponent::Record(record) => record.num_children(),
             JsonComponent::Key(key) => key.num_children(),
             JsonComponent::Matcher(matcher) => matcher.num_children()
         }
     }
 
-    fn to_graph_node(&self) -> Option<String> {
+    fn to_graph_node(&self) -> String {
         match self {
             JsonComponent::Value(value) => value.to_graph_node(),
             JsonComponent::Array(array) => array.to_graph_node(),
-            JsonComponent::Object(object) => object.to_graph_node(),
             JsonComponent::Record(record) => record.to_graph_node(),
             JsonComponent::Key(key) => key.to_graph_node(),
             JsonComponent::Matcher(matcher) => matcher.to_graph_node()
@@ -162,12 +151,11 @@ impl JsonComponentValue for JsonComponent {
     }
 }
 
-impl From<JsonComponent> for Box<dyn Generatable> {
-    fn from(value: JsonComponent) -> Self {
-        match value {
+impl From<Box<JsonComponent>> for Box<dyn Generatable> {
+    fn from(value: Box<JsonComponent>) -> Self {
+        match *value {
             JsonComponent::Value(value) => Box::new(value),
             JsonComponent::Array(array) => Box::new(array),
-            JsonComponent::Object(_) => panic!("Cannot convert object to generatable"),
             JsonComponent::Record(record) => Box::new(record),
             JsonComponent::Key(key) => Box::new(key),
             JsonComponent::Matcher(matcher) => Box::new(matcher)

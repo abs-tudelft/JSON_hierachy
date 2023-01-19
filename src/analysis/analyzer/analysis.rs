@@ -1,6 +1,6 @@
 use json::JsonValue;
 
-use crate::analysis::components::{JsonComponent, JsonType, Record, Key, Value, Array, Object, Matcher, Generatable};
+use crate::analysis::components::{JsonComponent, JsonType, Record, Key, Value, Array, Matcher, Generatable};
 
 use super::Analyzer;
 
@@ -8,46 +8,42 @@ impl Analyzer {
     // Analyze a record of the JSON object
     // Which results in the creation of 3 components:
     // A matcher, a key and a record
-    pub fn analyze_record(&mut self, key: &str, element: &JsonValue, outer_nesting: usize, inner_nesting: usize) -> (Option<Record>, usize) {
+    pub fn analyze_record(&mut self, key: &str, element: &JsonValue, outer_nesting: usize, inner_nesting: usize) -> (Option<Key>, usize) {
         let (child, new_inner_nesting) = self.analyze_element(element, outer_nesting + 1, inner_nesting);
 
-        let record_name = self.name_reg.register("record_parser", outer_nesting + 1);
+        // let record_name = self.name_reg.register("record_parser", outer_nesting + 1);
         let key_name = self.name_reg.register("key_parser", outer_nesting + 2);
         let matcher_name = self.name_reg.register(&format!("{}_matcher", key), outer_nesting + 2);
 
         // Create a components
         let matcher = Matcher::new(&matcher_name, &key_name, key.to_string(), outer_nesting + 2);
         let key = Key::new(&key_name, matcher.clone(), outer_nesting + 2, child.map(Box::new));
-        let record = Record::new(&record_name, outer_nesting + 1, new_inner_nesting, key.clone());
+        // let record = Record::new(&record_name, outer_nesting + 1, new_inner_nesting, key.clone());
         
         // Convert to TilComponent
         let matcher_component = matcher.to_til_component(&self.gen_params);
         let key_component = key.to_til_component(&self.gen_params);
-        let record_component = record.to_til_component(&self.gen_params);
+        // let record_component = record.to_til_component(&self.gen_params);
 
         // Add components to entity list
         self.entity_list.push(matcher_component);
         self.entity_list.push(key_component);
-        self.entity_list.push(record_component);
 
         // Register types
         self.type_manager.register_from_component(&matcher);
         self.type_manager.register_from_component(&key);
-        self.type_manager.register_from_component(&record);
 
         // Add signals to signal list
         self.signal_list.append(&mut matcher.get_outgoing_signals());
         self.signal_list.append(&mut key.get_outgoing_signals());
-        self.signal_list.append(&mut record.get_outgoing_signals());
 
         // Add entity to file manager
         self.file_manager.add_entity(matcher.get_file_type(), matcher.get_name());
         self.file_manager.add_entity(key.get_file_type(), key.get_name());
-        self.file_manager.add_entity(record.get_file_type(), record.get_name());
 
 
-        // Return the record and the new inner nesting level
-        (Some(record), new_inner_nesting + 1)  
+        // Return the key and keep the same inner nesting level
+        (Some(key), new_inner_nesting)  
     }
 
     // Analyze the element and recursively call itself if it is an object or array to find nested elements
@@ -127,7 +123,7 @@ impl Analyzer {
             },
             // Element is an object
             JsonValue::Object(_) => {
-                let mut children: Vec<Record> = Vec::new();
+                let mut children: Vec<Key> = Vec::new();
                 let mut new_inner_nesting = Vec::new();
 
                 // Analyze all the records of the object
@@ -136,8 +132,8 @@ impl Analyzer {
                     let (child, ret_inner_nesting) = self.analyze_record(key.0, key.1, outer_nesting, inner_nesting);
                     
                     // Push record if it is not None
-                    if let Some(component) = child {
-                        children.push(component);
+                    if let Some(key) = child {
+                        children.push(key);
                     }
 
                     // Save the inner nesting level of the record
@@ -150,8 +146,13 @@ impl Analyzer {
                 // Return the object with the children
                 (
                     Some(
-                        JsonComponent::Object(
-                            Object::new(children)
+                        JsonComponent::Record(
+                            Record::new(
+                                &self.name_reg.register("record_parser", outer_nesting + 1), 
+                                outer_nesting + 1, 
+                                max_inner_nesting, 
+                                children
+                            )
                         )
                     ),
                     // An object increases the inner nesting by 1
@@ -164,22 +165,22 @@ impl Analyzer {
         // Check if there is a component
         if let Some(component) = &component {
             // Check if the component is generatable
-            if let Some(gen_component) = component.get_if_generatable() {
-                // Convert to TilComponent
-                let til_component = gen_component.to_til_component(&self.gen_params);
+            let gen_component = component.get_generatable();
 
-                // Add components to entity list
-                self.entity_list.push(til_component);
+            // Convert to TilComponent
+            let til_component = gen_component.to_til_component(&self.gen_params);
 
-                // Register types
-                self.type_manager.register_from_component(gen_component);
+            // Add components to entity list
+            self.entity_list.push(til_component);
 
-                // Add signals to signal list
-                self.signal_list.append(&mut gen_component.get_outgoing_signals());
+            // Register types
+            self.type_manager.register_from_component(gen_component);
 
-                // Add entity to file manager
-                self.file_manager.add_entity(gen_component.get_file_type(), gen_component.get_name());
-            }
+            // Add signals to signal list
+            self.signal_list.append(&mut gen_component.get_outgoing_signals());
+
+            // Add entity to file manager
+            self.file_manager.add_entity(gen_component.get_file_type(), gen_component.get_name());
         }
 
         // Return the component and the new inner nesting level

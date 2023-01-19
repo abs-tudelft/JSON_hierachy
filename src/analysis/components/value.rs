@@ -116,10 +116,8 @@ impl Generatable for Value {
 }
 
 impl JsonComponentValue for Value {
-    fn to_graph_node(&self) -> Option<String> {
-        Some(
-            format!("{:?} parser\nO: {}", self.data_type, self.outer_nested)
-        )
+    fn to_graph_node(&self) -> String {
+        format!("{:?} parser\nO: {}", self.data_type, self.outer_nested)
     }
 
     fn get_children(&self) -> Vec<JsonComponent> {

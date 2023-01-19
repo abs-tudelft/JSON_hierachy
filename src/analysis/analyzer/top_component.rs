@@ -1,4 +1,4 @@
-use crate::analysis::{types::{TilComponent, streaming_interface::TilStreamDirection, stream_types::{StreamTypeDecl, StreamDim}, TilSignal, til_component::{TilInlineImplementation, TilImplementationType}}, components::JsonComponentValue};
+use crate::analysis::types::{TilComponent, streaming_interface::TilStreamDirection, stream_types::{StreamTypeDecl, StreamDim}, TilSignal, til_component::{TilInlineImplementation, TilImplementationType}};
 
 use super::{Analyzer, AnalyzerError, type_manager::StreamType};
 
@@ -17,11 +17,14 @@ impl Analyzer {
 
         let mut implementation = TilInlineImplementation::default(); 
 
-        for entry in &self.top_component.as_ref().ok_or(AnalyzerError::NoTop)?.get_children() {
-            if let Some(gen_com) = entry.get_if_generatable() {
-                implementation.add_signal(TilSignal::Input { source_stream_name: input_stream_name.to_string(), dest_inst_name: gen_com.get_instance_name().to_string(), dest_stream_name: "input".to_owned() });
-            }
-        }
+
+        let gen_com = self.top_component.as_ref()
+            // Check if it exists
+            .ok_or(AnalyzerError::NoTop)?
+            // Get as generatable
+            .get_generatable();
+
+        implementation.add_signal(TilSignal::Input { source_stream_name: input_stream_name.to_string(), dest_inst_name: gen_com.get_instance_name().to_string(), dest_stream_name: "input".to_owned() });
 
         let mut output_signals: Vec<TilSignal> = Vec::new();
         for signal in &self.signal_list {

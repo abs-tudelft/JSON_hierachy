@@ -74,24 +74,17 @@ impl Generatable for Key {
         // First check if there is a child
         match &self.value {
             Some(child) => {
-                // If the child is an object, get the children of the object
-                let children = match **child {
-                    JsonComponent::Object(ref obj) => obj.get_children(),
-                    _ => vec![(**child).clone()],
-                };
+                // Convert child to generatable
+                let child = Box::<dyn Generatable>::from(child.clone());
 
-                for child in children {
-                    // Force the child to be generatable
-                    let child =Box::<dyn Generatable>::from(child);
-                    signals.push(
-                        TilSignal::Intermediate { 
-                            source_inst_name: self.get_instance_name(), 
-                            source_stream_name: "output".to_owned(), 
-                            dest_inst_name: child.get_instance_name(), 
-                            dest_stream_name: "input".to_owned() 
-                        }
-                    );
-                }
+                signals.push(
+                    TilSignal::Intermediate { 
+                        source_inst_name: self.get_instance_name(), 
+                        source_stream_name: "output".to_owned(), 
+                        dest_inst_name: child.get_instance_name(), 
+                        dest_stream_name: "input".to_owned() 
+                    }
+                );
             },
             None => {
                 let output_name = format!("output_{}", self.get_instance_name());
@@ -129,10 +122,8 @@ impl Generatable for Key {
 }
 
 impl JsonComponentValue for Key {
-    fn to_graph_node(&self) -> Option<String> {
-        Some(
-            format!("Key filter\nO: {}", self.outer_nested)
-        )
+    fn to_graph_node(&self) -> String {
+        format!("Key filter\nO: {}", self.outer_nested)
     }
 
     fn get_children(&self) -> Vec<JsonComponent> {

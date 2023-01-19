@@ -10,22 +10,18 @@ struct Graph { nodes: Vec<String>, edges: Vec<(usize,usize)> }
 
 // Add a JSON component as a new node to the graph
 fn update_graph(component: &JsonComponent, parent_id: Option<usize>, graph: &mut Graph) {
-    let mut id = parent_id;
-
     // Get the label of the node
     let node_string = component.to_graph_node();
 
-    // Create a new node if the component has a label
-    if let Some(node_string) = node_string {
-        graph.nodes.push(node_string);
-        let tmp_id = graph.nodes.len() - 1;
+    // Create a new node
+    graph.nodes.push(node_string);
+    let node_id = graph.nodes.len() - 1;
 
-        if let Some(parent_id) = parent_id {
-            graph.edges.push((parent_id, tmp_id));
-        }
-
-        id = Some(tmp_id);
+    if let Some(parent_id) = parent_id {
+        graph.edges.push((parent_id, node_id));
     }
+
+    let id = Some(node_id);
 
     for child in component.get_children() {
         update_graph(&child, id, graph);
@@ -45,12 +41,8 @@ pub fn generate_dot(root: &JsonComponent, output_path: &str) {
 
     // Create a graph and add the JSON components recursively starting from the root
     let mut graph = Graph { nodes: Vec::new(), edges: Vec::new() };
-    
-    // Add the root node
-    graph.nodes.push("root".to_string());
-    let root_id = graph.nodes.len() - 1;
 
-    update_graph(root, Some(root_id), &mut graph);
+    update_graph(root, None, &mut graph);
 
     // Render the graph to the dot file
     dot::render(&graph, &mut file).unwrap()

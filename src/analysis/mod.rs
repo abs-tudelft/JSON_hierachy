@@ -1,11 +1,10 @@
-use self::{components::JsonComponent, analyzer::Analyzer};
+use self::analyzer::Analyzer;
 
 mod components;
 mod visualization;
 pub mod generator;
 pub mod analyzer;
 pub mod types;
-// mod vhdl;
 mod til;
 
 
@@ -95,7 +94,7 @@ fn namespace_from_project_name(project_name: &str) -> (String, String) {
 
 #[derive(Debug)]
 pub enum GeneratorError {
-    NoRoot,
+    AnalyzerError(analyzer::AnalyzerError),
     InvalidProjectName,
     JsonError(json::JsonError),
 }

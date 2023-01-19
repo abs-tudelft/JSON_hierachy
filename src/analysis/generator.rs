@@ -22,15 +22,9 @@ impl Generator {
 
     // Visualize the component tree as a dot file
     pub fn visualize(&self, path: &str) -> Result<(), GeneratorError> {
-        let root = self.analyzer.get_root();
+        let root = self.analyzer.get_root().map_err(GeneratorError::AnalyzerError)?;
 
-        // Check if the root exists
-        match root {
-            Ok(root) => {
-                visualization::generate_dot(root, path)
-            },
-            Err(_) => return Err(GeneratorError::NoRoot),
-        }
+        visualization::generate_dot(root, path);
 
         Ok(())
     }

@@ -75,10 +75,8 @@ impl Generatable for Matcher {
 }
 
 impl JsonComponentValue for Matcher {
-    fn to_graph_node(&self) -> Option<String> {
-        Some(
-            format!("Regex matcher\n\"{}\"", self.matcher)
-        )   
+    fn to_graph_node(&self) -> String {
+        format!("Regex matcher\n\"{}\"", self.matcher)
     }
 
     fn get_children(&self) -> Vec<JsonComponent> {
