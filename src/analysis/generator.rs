@@ -1,10 +1,10 @@
 use super::{visualization, Generator, GeneratorParams, analyzer::Analyzer, GeneratorError};
 
 impl Generator {
-    pub fn new(project_name: &str, epc: usize, bit_width: usize, int_width: usize) -> Generator {
+    pub fn new(project_name: &str, epc: usize, int_width: usize) -> Generator {
         Generator {
             analyzer: Analyzer::new(),
-            gen_params: GeneratorParams::new(epc, bit_width, int_width, "", project_name),
+            gen_params: GeneratorParams::new(epc, 8, int_width, "", project_name),
         }
     }
 

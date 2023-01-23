@@ -24,7 +24,7 @@ impl Analyzer {
             // Get as generatable
             .get_generatable();
 
-        implementation.add_signal(TilSignal::Input { source_stream_name: input_stream_name.to_string(), dest_inst_name: gen_com.get_instance_name().to_string(), dest_stream_name: "input".to_owned() });
+        implementation.add_signal(TilSignal::Input { source_stream_name: input_stream_name.to_string(), dest_inst_name: gen_com.get_instance_name(), dest_stream_name: "input".to_owned() });
 
         let mut output_signals: Vec<TilSignal> = Vec::new();
         for signal in &self.signal_list {
