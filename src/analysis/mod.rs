@@ -47,8 +47,9 @@ fn validate_project_name(project_name: &str) -> Result<String, GeneratorError> {
     // 1. Project name is empty
     // 2. Project name contains a space
     // 3. Project name cannot contain any of the following characters: \ / : * ? " < > | , . ; ' ! @ # $ % ^ & ( ) - + = [ ] { } ` ~
-    // 4. Project cannot contain consecutive underscores
-    // 5. Project cannot start or end with an underscore or number
+    // 4. Project name cannot contain consecutive underscores
+    // 5. Project name cannot start with an underscore or number
+    // 6. Project name cannot end with an underscore
 
     // 1
     if project_name.is_empty() {
@@ -69,6 +70,11 @@ fn validate_project_name(project_name: &str) -> Result<String, GeneratorError> {
 
     // 5
     if project_name.starts_with('_') || project_name.starts_with('0') || project_name.starts_with('1') || project_name.starts_with('2') || project_name.starts_with('3') || project_name.starts_with('4') || project_name.starts_with('5') || project_name.starts_with('6') || project_name.starts_with('7') || project_name.starts_with('8') || project_name.starts_with('9') {
+        return Err(GeneratorError::InvalidProjectName);
+    }
+
+    // 6
+    if project_name.ends_with('_') {
         return Err(GeneratorError::InvalidProjectName);
     }
 

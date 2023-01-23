@@ -1,32 +1,28 @@
 use super::{Generator, til};
 
 /**********************************************************************************
- * Set of functions to generate VHDL code around the components                   *
+ * Set of functions to generate TIL code from the analyzed definitions            *
  **********************************************************************************/
 
- fn generate_prelude(namespace: &str) -> String {
+ fn generate_namespace_def(namespace: &str) -> String {
     let mut prelude = String::new();
     prelude.push_str(&format!("namespace {} {{\n\t", namespace));
 
     prelude
 }
 
-fn generate_postlude() -> String {
+fn generate_close_namespace() -> String {
     let mut postlude = String::new();
     postlude.push_str("\n}");
 
     postlude
 }
 
-/**********************************************************************************
- * Implementation of how a component is translated to TIL                        *
- **********************************************************************************/
-
 impl Generator {
     pub fn generate_til(&mut self) -> String {
         let mut til = String::new();
 
-        til.push_str(&til::generate_prelude(&self.gen_params.namespace));
+        til.push_str(&til::generate_namespace_def(&self.gen_params.namespace));
 
         let (type_defs, stream_defs) = self.analyzer.get_definitions();
 
@@ -41,7 +37,7 @@ impl Generator {
         let top_component = self.analyzer.assemble_top_component().unwrap();
         til.push_str(&top_component.to_string());
 
-        til.push_str(&til::generate_postlude());
+        til.push_str(&til::generate_close_namespace());
 
         til
     }

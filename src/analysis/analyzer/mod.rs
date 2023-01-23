@@ -2,15 +2,16 @@ use json::JsonValue;
 
 use crate::analysis::components::JsonComponent;
 
-use self::file_manager::FileManager;
+use self::{file_manager::FileManager, signal_manager::SignalManager};
 
-use super::{types::{TilStreamlet, TilSignal}, GeneratorParams, analyzer::{name_reg::NameReg, type_manager::{TypeManager, StreamType}}};
+use super::{types::TilStreamlet, GeneratorParams, analyzer::{name_reg::NameReg, type_manager::{TypeManager, StreamType}}};
 
 mod analysis;
 mod name_reg;
 pub mod type_manager;
 pub mod top_component;
 pub mod file_manager;
+pub mod signal_manager;
 
 /**********************************************************************************
  * Set of functions to analyze the parsed JSON object into a component structure  *
@@ -23,7 +24,7 @@ pub struct Analyzer {
     entity_list: Vec<TilStreamlet>,
     file_manager: FileManager,
     gen_params: GeneratorParams,
-    signal_list: Vec<TilSignal>,
+    signal_manager: SignalManager,
     top_component: Option<JsonComponent>,
 }
 
@@ -35,7 +36,7 @@ impl Analyzer {
             entity_list: Vec::new(),
             file_manager: FileManager::new(),
             gen_params: GeneratorParams::default(),
-            signal_list: Vec::new(),
+            signal_manager: SignalManager::default(),
             top_component: None,
         }
     }

@@ -31,8 +31,8 @@ impl Analyzer {
         self.type_manager.register_from_component(&key);
 
         // Add signals to signal list
-        self.signal_list.append(&mut matcher.get_outgoing_signals());
-        self.signal_list.append(&mut key.get_outgoing_signals());
+        self.signal_manager.add_multiple_signals(matcher.get_outgoing_signals());
+        self.signal_manager.add_multiple_signals(key.get_outgoing_signals());
 
         // Add entity to file manager
         self.file_manager.add_entity(matcher.get_file_type(), matcher.get_name());
@@ -174,7 +174,7 @@ impl Analyzer {
             self.type_manager.register_from_component(gen_component);
 
             // Add signals to signal list
-            self.signal_list.append(&mut gen_component.get_outgoing_signals());
+            self.signal_manager.add_multiple_signals(gen_component.get_outgoing_signals());
 
             // Add entity to file manager
             self.file_manager.add_entity(gen_component.get_file_type(), gen_component.get_name());
