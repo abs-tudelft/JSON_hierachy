@@ -27,9 +27,7 @@ impl Analyzer {
         implementation.add_signal(TilSignal::Input { source_stream_name: input_stream_name.to_string(), dest_inst_name: gen_com.get_instance_name(), dest_stream_name: "input".to_owned() });
 
         // Add all intermediate signals to the implementation
-        for signal in self.signal_manager.get_intermediate_signals() {
-            implementation.add_signal(signal.clone());
-        }
+        implementation.add_multiple_signals(self.signal_manager.get_intermediate_signals().to_vec());
 
         // Add all output signals to the implementation and add the output streams to the top component respectively
         for signal in self.signal_manager.get_output_signals() {
