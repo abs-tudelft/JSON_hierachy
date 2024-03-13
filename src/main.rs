@@ -13,6 +13,38 @@ fn main() {
      }
      "#;
 
+     let _student = r#"
+     {
+        "student_number": "S123456789",
+        "name": "John Doe",
+        "birthdate": "2000-05-15",
+        "study_start": "2021-05-15",
+        "study_end": null,
+        "study": "Computer Science",
+        "email": "john.doe@example.com",
+        "exams": [
+          {
+            "course_code": "CS101",
+            "course_name": "Introduction to Computer Science",
+            "exam_date": "2023-12-10",
+            "grade": 80
+          },
+          {
+            "course_code": "MATH201",
+            "course_name": "Calculus",
+            "exam_date": "2023-12-15",
+            "grade": 60
+          },
+          {
+            "course_code": "ENG101",
+            "course_name": "English Composition",
+            "exam_date": "2023-12-20",
+            "grade": 73
+          }
+        ]
+      }
+      "#;
+
     let _nested = r#"
     {
         "voltage":
@@ -30,10 +62,10 @@ fn main() {
     let visualize = true;
 
     // Create a new generator
-    let mut generator = Generator::new("schema_parser", 4, 64);
+    let mut generator = Generator::new("student_schema_parser", 4, 64);
 
     // Analyze the JSON string
-    generator.analyze(_multiple_keys).unwrap();
+    generator.analyze(_student).unwrap();
     
     if visualize {
         // Visualize the JSON string
