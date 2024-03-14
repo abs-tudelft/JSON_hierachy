@@ -119,6 +119,16 @@ impl Generic {
     pub fn get_type(&self) -> &GenericType {
         &self.generic_type
     }
+
+    pub fn td(&self) -> String {
+        let value = match self.get_type() {
+            GenericType::Integer(value) => *value as i64,
+            GenericType::Natural(value) => *value as i64,
+            GenericType::Positive(value) => *value as i64,
+            GenericType::Dimensionality(value) => *value as i64
+        };
+        format!("\t{} = {};\n", self.get_name(), value)
+    }
 }
 
 impl Display for Generic {

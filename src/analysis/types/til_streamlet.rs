@@ -45,19 +45,10 @@ impl TilStreamlet {
         if !self.get_streams().get_generics().is_empty() {
             let mut generic_defs = String::new();
 
-            for generic in self.get_streams().get_generics() {
-                generic_defs.push_str(
-                    &format!("{},\n", generic)
-                );
-            }
+            let str = self.get_streams().get_generics().iter().map(|e| e.td()).collect::<Vec<_>>().join("");
+            generic_defs.push_str(&str);
 
-            generics = formatdoc!(
-                "
-                <
-                {}
-                >",
-                generic_defs
-            );
+            generics = generic_defs;
         }
 
         for stream in self.get_streams().get_streams() {
@@ -68,7 +59,7 @@ impl TilStreamlet {
 
         comp_def.push_str(
             &formatdoc!(
-                "streamlet {} {{\n{}}}",
+                "streamlet {} {{\n{generics}\n{}}}",
                 self.get_name(),
                 // generics,
                 stream_defs
