@@ -36,6 +36,57 @@ impl TilStreamlet {
     pub fn get_implementation(&self) -> &Option<TilImplementationType> {
         &self.implementation
     }
+
+    pub fn td (&self) -> String {
+        let mut comp_def = String::new();
+        let mut generics = String::new();
+        let mut stream_defs = String::new();
+
+        if !self.get_streams().get_generics().is_empty() {
+            let mut generic_defs = String::new();
+
+            for generic in self.get_streams().get_generics() {
+                generic_defs.push_str(
+                    &format!("{},\n", generic)
+                );
+            }
+
+            generics = formatdoc!(
+                "
+                <
+                {}
+                >",
+                generic_defs
+            );
+        }
+
+        for stream in self.get_streams().get_streams() {
+            stream_defs.push_str(
+                &format!("\t{}\n", stream.td())
+            );
+        }
+
+        comp_def.push_str(
+            &formatdoc!(
+                "streamlet {} {{\n{}}}",
+                self.get_name(),
+                // generics,
+                stream_defs
+            )
+        );
+
+        if let Some(implementation) = &self.implementation {
+            let temp_str = match implementation {
+                TilImplementationType::Path(str) => "".to_string(),
+                TilImplementationType::Inline(inline) => {
+                    inline.td(self.get_name().to_string())
+                },
+            };
+            comp_def += &temp_str;
+        }
+
+        format!("{};", comp_def)
+    }
 }
 
 impl Display for TilStreamlet {
@@ -122,6 +173,24 @@ impl TilInlineImplementation {
     pub fn get_signals(&self) -> &Vec<TilSignal> {
         &self.signals
     }
+
+    pub fn td(&self, name: String) -> String {
+        let mut impl_til = String::new();
+
+        for instance in self.get_instances() {
+            impl_til.push_str(&instance.td());
+            impl_til.push('\n');
+        }
+
+        impl_til.push_str("\n\t");
+
+        for signal in self.get_signals() {
+            impl_til.push_str(&signal.td());
+            impl_til.push('\n');
+        }
+        
+        format!("\n\nimpl {name}_impl of {name} @External {{\n{impl_til}}}")
+    }
 }
 
 impl Display for TilImplementationType {
@@ -178,6 +247,10 @@ impl TilInstance {
             component_name: String::from(component_name),
             instance_name: String::from(instance_name),
         }
+    }
+
+    pub fn td(&self) -> String {
+        format!("\t{} = {};", self.instance_name, self.component_name)
     }
 }
 

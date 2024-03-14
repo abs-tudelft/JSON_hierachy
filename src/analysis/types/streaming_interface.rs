@@ -71,6 +71,10 @@ impl TilStream {
     pub fn get_type(&self) -> &StreamTypeDecl {
         &self.stream_type
     }
+
+    pub fn td(&self) -> String {
+        format!("{}: {} {};", self.get_name(), self.get_type(), self.direction)
+    }
 }
 
 impl Display for TilStream {

@@ -6,6 +6,7 @@ pub mod generator;
 pub mod analyzer;
 pub mod types;
 mod til;
+mod td;
 
 
 pub struct Generator {

@@ -81,6 +81,17 @@ impl StreamType {
 
         format!("type {}{} = {};\n\n", self.get_name(), dim_str, type_params)
     }
+
+    pub fn get_td_type_def_string(&self, gen_params: &GeneratorParams) -> String {
+        let type_params = self.get_type_params(gen_params);
+
+        let dim_str = match type_params.dimensionality {
+            Dimensionality::Fixed(_) => "".to_string(),
+            Dimensionality::Generic => format!("<{}: dimensionality = 2>", Dimensionality::Generic),
+        };
+
+        format!("{} = {};\n\n", self.get_name(), type_params.td())
+    }
 }
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
@@ -101,6 +112,22 @@ impl StreamParams {
             synchronicity,
             complexity,
         }
+    }
+
+    pub fn td(&self) -> String {
+        format!(
+"Stream(
+    Bit({}),
+    throughput: {}.0,
+    dimension: {},
+    synchronicity: \"{:?}\",
+    complexity: {},
+)",
+        self.data_bits,
+        self.throughput,
+        self.dimensionality,
+        self.synchronicity,
+        self.complexity,)
     }
 }
 
