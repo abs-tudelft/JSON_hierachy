@@ -6,7 +6,7 @@ use super::{Generator, td};
 
  fn generate_namespace_def(namespace: &str) -> String {
     let mut prelude = String::new();
-    prelude.push_str(&format!("package {};\n", namespace));
+    prelude.push_str(&format!("package {};\n\n", namespace.replace("::", "_")));
 
     prelude
 }
@@ -26,9 +26,13 @@ impl Generator {
 
         let (type_defs, stream_defs) = self.analyzer.get_definitions();
 
+        td.push_str("streamlet t <d: int> {");
+
         for type_def in type_defs {
             td.push_str(&type_def.get_td_type_def_string(&self.gen_params));
         }
+
+        td.push_str("}\n\n");
 
         for stream_def in stream_defs {
             td.push_str(&format!("{}\n\n", stream_def.td()));

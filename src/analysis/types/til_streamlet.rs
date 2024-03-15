@@ -43,7 +43,7 @@ impl TilStreamlet {
         let mut stream_defs = String::new();
 
         if !self.get_streams().get_generics().is_empty() {
-            let mut generic_defs = String::new();
+            let mut generic_defs = "\n".to_string();
 
             let str = self.get_streams().get_generics().iter().map(|e| e.td()).collect::<Vec<_>>().join("");
             generic_defs.push_str(&str);
@@ -59,24 +59,17 @@ impl TilStreamlet {
 
         comp_def.push_str(
             &formatdoc!(
-                "streamlet {} {{\n{generics}\n{}}}",
+                "streamlet {} {{{generics}\n{stream_defs}}}",
                 self.get_name(),
-                // generics,
-                stream_defs
             )
         );
 
         if let Some(implementation) = &self.implementation {
-            let temp_str = match implementation {
-                TilImplementationType::Path(str) => "".to_string(),
-                TilImplementationType::Inline(inline) => {
-                    inline.td(self.get_name().to_string())
-                },
-            };
+            let temp_str = implementation.td(self.get_name().to_string());
             comp_def += &temp_str;
         }
 
-        format!("{};", comp_def)
+        comp_def
     }
 }
 
@@ -106,7 +99,7 @@ impl Display for TilStreamlet {
 
         for stream in self.get_streams().get_streams() {
             stream_defs.push_str(
-                &format!("{},\n", stream)
+                &format!("\t{},\n", stream)
             );
         }
 
@@ -136,6 +129,33 @@ pub enum TilImplementationType {
     Inline(TilInlineImplementation),
 }
 
+impl TilImplementationType {
+    pub fn td(&self, name: String) -> String {
+        match self {
+            TilImplementationType::Inline(inline) => {
+                let mut impl_til = String::new();
+
+                for instance in inline.get_instances() {
+                    impl_til.push_str(&instance.td());
+                    impl_til.push('\n');
+                }
+
+                impl_til.push_str("\n\t");
+
+                for signal in inline.get_signals() {
+                    impl_til.push_str(&signal.td());
+                    impl_til.push('\n');
+                }
+                
+                format!("\n\nimpl {name}_impl of {name} {{\n{impl_til}}}")
+            },
+            TilImplementationType::Path(path) => {
+                format!("\n\nimpl {name}_impl of {name} @External {{ }}")
+            }
+        }
+    }
+}
+
 #[derive(Clone, Default)]
 pub struct TilInlineImplementation {
     instances: Vec<TilInstance>,
@@ -163,24 +183,6 @@ impl TilInlineImplementation {
 
     pub fn get_signals(&self) -> &Vec<TilSignal> {
         &self.signals
-    }
-
-    pub fn td(&self, name: String) -> String {
-        let mut impl_til = String::new();
-
-        for instance in self.get_instances() {
-            impl_til.push_str(&instance.td());
-            impl_til.push('\n');
-        }
-
-        impl_til.push_str("\n\t");
-
-        for signal in self.get_signals() {
-            impl_til.push_str(&signal.td());
-            impl_til.push('\n');
-        }
-        
-        format!("\n\nimpl {name}_impl of {name} @External {{\n{impl_til}}}")
     }
 }
 
@@ -241,7 +243,7 @@ impl TilInstance {
     }
 
     pub fn td(&self) -> String {
-        format!("\t{} = {};", self.instance_name, self.component_name)
+        format!("\tinstance {}({}_impl);", self.instance_name, self.component_name)
     }
 }
 

@@ -90,7 +90,7 @@ impl StreamType {
             Dimensionality::Generic => format!("<{}: dimensionality = 2>", Dimensionality::Generic),
         };
 
-        format!("{} = {};\n\n", self.get_name(), type_params.td())
+        format!("\n{} = {};\n", self.get_name(), type_params.td())
     }
 }
 
@@ -118,10 +118,10 @@ impl StreamParams {
         format!(
 "Stream(
     Bit({}),
-    throughput: {}.0,
-    dimension: {},
-    synchronicity: \"{:?}\",
-    complexity: {},
+    throughput = {}.0,
+    dimension = {},
+    synchronicity = \"{:?}\",
+    complexity = {}
 )",
         self.data_bits,
         self.throughput,

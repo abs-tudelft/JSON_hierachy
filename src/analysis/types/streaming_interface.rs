@@ -73,7 +73,11 @@ impl TilStream {
     }
 
     pub fn td(&self) -> String {
-        format!("{}: {} {};", self.get_name(), self.get_type(), self.direction)
+        let type_dim = self.get_type().get_stream_dim();
+        if (type_dim.is_some()) {
+            return format!("{}: t{}.{} {};", self.get_name(), type_dim.as_ref().unwrap(), self.get_type().get_name(), self.direction);
+        }
+        format!("{}: t<0>.{} {};", self.get_name(), self.get_type().get_name(), self.direction)
     }
 }
 
