@@ -67,7 +67,7 @@ impl TilSignal {
 
         // If the signal is from an instance, add the instance name
         if let Some(source_inst_name) = self.get_source_inst_name() {
-            signal.push_str(&format!("\t{}.", source_inst_name));
+            signal.push_str(&format!("    {}.", source_inst_name));
         } else {
             signal.push_str(&"self.".to_string());
         }

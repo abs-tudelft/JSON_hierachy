@@ -53,7 +53,7 @@ impl TilStreamlet {
 
         for stream in self.get_streams().get_streams() {
             stream_defs.push_str(
-                &format!("\t{}\n", stream.td())
+                &format!("    {}\n", stream.td())
             );
         }
 
@@ -99,7 +99,7 @@ impl Display for TilStreamlet {
 
         for stream in self.get_streams().get_streams() {
             stream_defs.push_str(
-                &format!("\t{},\n", stream)
+                &format!("    {},\n", stream)
             );
         }
 
@@ -140,7 +140,7 @@ impl TilImplementationType {
                     impl_til.push('\n');
                 }
 
-                impl_til.push_str("\n\t");
+                impl_til.push_str("\n    ");
 
                 for signal in inline.get_signals() {
                     impl_til.push_str(&signal.td());
@@ -243,7 +243,7 @@ impl TilInstance {
     }
 
     pub fn td(&self) -> String {
-        format!("\tinstance {}({}_impl);", self.instance_name, self.component_name)
+        format!("    instance {}({}_impl);", self.instance_name, self.component_name)
     }
 }
 

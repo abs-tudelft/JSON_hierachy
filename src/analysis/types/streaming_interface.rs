@@ -131,7 +131,7 @@ impl Generic {
             GenericType::Positive(value) => *value as i64,
             GenericType::Dimensionality(value) => *value as i64
         };
-        format!("\t{} = {};\n", self.get_name(), value)
+        format!("    {} = {};\n", self.get_name(), value)
     }
 }
 

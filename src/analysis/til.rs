@@ -6,7 +6,7 @@ use super::{Generator, til};
 
  fn generate_namespace_def(namespace: &str) -> String {
     let mut prelude = String::new();
-    prelude.push_str(&format!("namespace {} {{\n\t", namespace));
+    prelude.push_str(&format!("namespace {} {{\n    ", namespace));
 
     prelude
 }
