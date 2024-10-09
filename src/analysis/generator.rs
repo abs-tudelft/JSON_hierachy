@@ -44,13 +44,16 @@ impl Generator {
         std::fs::create_dir_all(format!("{}/src", proj_dir)).unwrap();
 
         // Create the file
-        let mut file = std::fs::File::create(format!("{}/src/{}.til", proj_dir, self.gen_params.project_name)).unwrap();
+        let mut til_file = std::fs::File::create(format!("{}/src/{}.til", proj_dir, self.gen_params.project_name)).unwrap();
+        let mut td_file = std::fs::File::create(format!("{}/src/{}.td", proj_dir, self.gen_params.project_name)).unwrap();
 
         use std::io::Write;
 
         let til = self.generate_til();
+        let td = self.generate_td();
 
-        file.write_fmt(format_args!("{}", til)).unwrap();
+        til_file.write_fmt(format_args!("{}", til)).unwrap();
+        td_file.write_fmt(format_args!("{}", td)).unwrap();
 
         // Generate the files
         let file_manager = self.analyzer.get_file_manager();

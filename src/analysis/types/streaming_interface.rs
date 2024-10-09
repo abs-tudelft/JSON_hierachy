@@ -71,6 +71,14 @@ impl TilStream {
     pub fn get_type(&self) -> &StreamTypeDecl {
         &self.stream_type
     }
+
+    pub fn td(&self) -> String {
+        let type_dim = self.get_type().get_stream_dim();
+        if (type_dim.is_some()) {
+            return format!("{}: t{}.{} {};", self.get_name(), type_dim.as_ref().unwrap(), self.get_type().get_name(), self.direction);
+        }
+        format!("{}: t<0>.{} {};", self.get_name(), self.get_type().get_name(), self.direction)
+    }
 }
 
 impl Display for TilStream {
@@ -114,6 +122,16 @@ impl Generic {
 
     pub fn get_type(&self) -> &GenericType {
         &self.generic_type
+    }
+
+    pub fn td(&self) -> String {
+        let value = match self.get_type() {
+            GenericType::Integer(value) => *value as i64,
+            GenericType::Natural(value) => *value as i64,
+            GenericType::Positive(value) => *value as i64,
+            GenericType::Dimensionality(value) => *value as i64
+        };
+        format!("    {} = {};\n", self.get_name(), value)
     }
 }
 

@@ -54,7 +54,7 @@ impl Analyzer {
                             Value::new(
                                 &self.name_reg.register("string_parser", outer_nesting),
                                 JsonType::String,
-                                outer_nesting, // Strings don't increase the nesting level since the input is a string
+                                outer_nesting+1, // Strings don't increase the nesting level since the input is a string
                             )
                         )
                     ), 

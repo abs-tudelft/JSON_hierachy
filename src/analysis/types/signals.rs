@@ -61,4 +61,33 @@ impl TilSignal {
             TilSignal::Output{dest_stream_name, ..} => dest_stream_name,
         }
     }
+
+    pub fn td(&self) -> String {
+        let mut signal = String::new();
+
+        // If the signal is from an instance, add the instance name
+        if let Some(source_inst_name) = self.get_source_inst_name() {
+            signal.push_str(&format!("    {}.", source_inst_name));
+        } else {
+            signal.push_str(&"self.".to_string());
+        }
+
+        // Add stream name
+        signal.push_str(self.get_source_stream_name());
+
+        // Connector
+        signal.push_str(" => ");
+
+        // If the signal is to an instance, add the instance name
+        if let Some(dest_inst_name) = self.get_dest_inst_name() {
+            signal.push_str(&format!("{}.", dest_inst_name));
+        } else {
+            signal.push_str(&"self.".to_string());
+        }
+
+        // Add stream name
+        signal.push_str(self.get_dest_stream_name());
+
+        format!("{};", signal)
+    }
 }
