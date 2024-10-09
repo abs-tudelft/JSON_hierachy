@@ -27,6 +27,8 @@ To use JSON-TIL, clone the repository and build the project:
 git clone https://github.com/your-org/json-til.git
 cd json-til
 cargo build --release
+# or
+cargo run -- -i examples/simple.json -o output --visualize
 ```
 
 ## Requirements

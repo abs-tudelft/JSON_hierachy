@@ -1,0 +1,7 @@
+{
+  "temperature":
+  [{"voltage":1128},{"voltage":1213},{"voltage":1850}],
+  "valid":true,
+  "humidity":
+  [{"voltage":567},{"voltage":234},{"voltage":1230}]
+}
