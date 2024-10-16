@@ -71,6 +71,17 @@ impl StreamType {
         }
     }
 
+    pub fn get_datatype_name(&self) -> &str {
+        match self {
+            StreamType::Json => "byte_t",
+            StreamType::Int => "integer_t",
+            StreamType::Bool => "boole_t",
+            StreamType::Record => "record_t",
+            StreamType::MatcherMatch => "bool_t",
+            StreamType::MatcherStr => "byte_t",
+        }
+    }
+
     pub fn get_type_def_string(&self, gen_params: &GeneratorParams) -> String {
         let type_params = self.get_type_params(gen_params);
 
@@ -85,12 +96,7 @@ impl StreamType {
     pub fn get_td_type_def_string(&self, gen_params: &GeneratorParams) -> String {
         let type_params = self.get_type_params(gen_params);
 
-        let dim_str = match type_params.dimensionality {
-            Dimensionality::Fixed(_) => "".to_string(),
-            Dimensionality::Generic => format!("<{}: dimensionality = 2>", Dimensionality::Generic),
-        };
-
-        format!("\n{} = {};\n", self.get_name(), type_params.td())
+        format!("\n{} = {};\n", self.get_name(), type_params.td(self.get_datatype_name()))
     }
 }
 
@@ -114,16 +120,16 @@ impl StreamParams {
         }
     }
 
-    pub fn td(&self) -> String {
+    pub fn td(&self, data_name: &str) -> String {
         format!(
 "Stream(
-    Bit({}),
+    {},
     throughput = {}.0,
     dimension = {},
     synchronicity = \"{:?}\",
     complexity = {}
 )",
-        self.data_bits,
+        data_name,
         self.throughput,
         self.dimensionality,
         self.synchronicity,

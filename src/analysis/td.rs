@@ -1,3 +1,4 @@
+use indoc::formatdoc;
 use super::{Generator, td};
 
 /**********************************************************************************
@@ -26,7 +27,16 @@ impl Generator {
 
         let (type_defs, stream_defs) = self.analyzer.get_definitions();
 
-        td.push_str("streamlet t <d: int> {");
+        td.push_str(&formatdoc!(
+            "byte_t = Bit({bitwidth});
+            record_t = Bit({recordwidth});
+            integer_t = Bit({intwidth});
+            bool_t = Bit(1);
+
+            streamlet t <d: int> {{",
+            bitwidth=self.gen_params.bit_width, recordwidth=self.gen_params.bit_width+1,
+            intwidth=self.gen_params.int_width
+        ));
 
         for type_def in type_defs {
             td.push_str(&type_def.get_td_type_def_string(&self.gen_params));
